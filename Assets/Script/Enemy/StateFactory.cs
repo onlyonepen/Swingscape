@@ -8,8 +8,6 @@ using UnityEngine;
 
 namespace Script.Enemy
 {
-    public enum EnemyType { LightDrone, HeavyDrone }
-    
     /// <summary>
     /// Shared base for all drone-family enemies.
     /// Idle, Aggro, and Stagger are identical across variants — only Attack differs.

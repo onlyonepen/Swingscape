@@ -9,6 +9,7 @@ using VInspector;
 
 namespace Script.Enemy
 {
+    [RequireComponent(typeof(Grappleable), typeof(Attackable))]
     public class BaseEnemy : MonoBehaviour, IDamagable
     {
         public EnemyType Type;
@@ -31,7 +32,14 @@ namespace Script.Enemy
         [HideInInspector] public bool Iskilled = false;
 
         private Collider col;
-        
+        private Attackable attackable;
+
+        private void Awake()
+        {
+            GetComponent<Grappleable>().Type = Type == EnemyType.HeavyDrone ? GrappleType.Heavy : GrappleType.Light;
+            attackable = GetComponent<Attackable>();
+        }
+
         private void Start()
         {
             stateFactory = CreateFactory(Type);
@@ -56,6 +64,7 @@ namespace Script.Enemy
         public void GetPull()
         {
             ChangeState(stateFactory.CreateStaggerState(this));
+            attackable.TriggerHitEffects();
         }
         
         public void SplitDeath(Transform plane)

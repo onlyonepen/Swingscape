@@ -61,8 +61,9 @@ public class ThrowGrappleState : PlayerState
                 return;
             }
 
-            LayerMask combinedLayer = manager.Targeting.Swingable | manager.Targeting.Pullable | manager.Targeting.HeavyPull;
-            if ((1 << manager.RUD.GrappledObject.layer & combinedLayer) != 0) { manager.ChangeState(manager.SwingState); }
+            bool isSwingable = ((1 << manager.RUD.GrappledObject.layer) & manager.Targeting.Swingable) != 0;
+            bool isEnemy = Grappleable.Resolve(manager.RUD.GrappledObject) != GrappleType.Normal;
+            if (isSwingable || isEnemy) { manager.ChangeState(manager.SwingState); }
             else manager.ChangeState(manager.pullRopeBackState);
         }
     }
@@ -84,8 +85,7 @@ public class ThrowGrappleState : PlayerState
         
         if (grappledObj != null) 
         {
-            // 3. Explicitly group the bitshift (1 << layer) for better readability
-            if (((1 << grappledObj.layer) & GlobalReference.Instance.EnemyLayer) != 0) 
+            if (Grappleable.Resolve(grappledObj) != GrappleType.Normal)
             {
                 targetGoal = grappledObj.transform.position;
             }

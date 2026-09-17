@@ -39,7 +39,7 @@ public class GrappleLeapState : PlayerState
         float currentOffset = manager.GrappleEnemyOffset;
 
         // Check if object is an enemy and dynamically calculate offset from collider size
-        if (manager.RUD.GrappledObject != null && ((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0) 
+        if (Grappleable.Resolve(manager.RUD.GrappledObject) != GrappleType.Normal)
         {
             trueTarget = manager.RUD.GrappledObject.transform.position;
 

@@ -1,6 +1,7 @@
 using JL.Splitting;
 using UnityEngine;
 
+[RequireComponent(typeof(Attackable))]
 public class ContinueSplittable : MonoBehaviour, IDamagable
 {
     [Header("Slice Juice")]

@@ -1,8 +1,8 @@
 <!-- UNITY CODE ASSIST INSTRUCTIONS START -->
-- Project name: Doppamine-sucker
+- Project name: Swingscape
 - Unity version: Unity 6000.3.8f1
 - Active game object:
-  - Name: Secondary light
+  - Name: GlobalReference
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

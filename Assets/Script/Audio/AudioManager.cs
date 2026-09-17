@@ -10,8 +10,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private int poolSize = 30;
     
     [Header("Audio Library")]
-    [SerializeField] private List<AudioDataSO> audioLibrary = new List<AudioDataSO>();
-    
+    [SerializeField] private AudioLibrarySO audioLibrary;
+
     // Dictionary for lightning-fast string lookups
     private Dictionary<string, AudioDataSO> audioDictionary;
     private List<AudioSource> audioPool = new List<AudioSource>();
@@ -28,16 +28,23 @@ public class AudioManager : MonoBehaviour
 
         // 1. Initialize the fast-lookup dictionary
         audioDictionary = new Dictionary<string, AudioDataSO>();
-        foreach (var audioData in audioLibrary)
+        if (audioLibrary != null)
         {
-            if (!audioDictionary.ContainsKey(audioData.audioName))
+            foreach (var audioData in audioLibrary.audioClips)
             {
-                audioDictionary.Add(audioData.audioName, audioData);
+                if (!audioDictionary.ContainsKey(audioData.audioName))
+                {
+                    audioDictionary.Add(audioData.audioName, audioData);
+                }
+                else
+                {
+                    Debug.LogWarning($"AudioManager: Duplicate audio name found! ({audioData.audioName})");
+                }
             }
-            else
-            {
-                Debug.LogWarning($"AudioManager: Duplicate audio name found! ({audioData.audioName})");
-            }
+        }
+        else
+        {
+            Debug.LogWarning("AudioManager: No AudioLibrarySO assigned!");
         }
 
         // 2. Initialize the Audio Pool

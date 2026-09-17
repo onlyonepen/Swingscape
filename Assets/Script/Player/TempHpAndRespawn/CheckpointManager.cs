@@ -52,10 +52,8 @@ public class CheckpointManager : MonoBehaviour
         //Respawn
         SpawnTower();
 
-        if (GameValue.ObtainedGrapple)
-        {
-            GlobalReference.Instance.player.Locomotion.canGrapple = true;
-        }
+        // Explicit sync in both directions: a fresh run (ObtainedGrapple == false) locks grapple back down.
+        GlobalReference.Instance.player.Locomotion.canGrapple = GameValue.ObtainedGrapple;
     }
 
     public void NextFloor()

@@ -72,7 +72,7 @@ public class GrapplePullState : PlayerState
         float currentOffset = manager.GrappleEnemyOffset;
 
         // Check if object is an enemy and dynamically calculate offset from collider size
-        if (((1 << grappledObj.layer) & GlobalReference.Instance.EnemyLayer) != 0)
+        if (Grappleable.Resolve(grappledObj) != GrappleType.Normal)
         {
             if (grappledObj.TryGetComponent<Collider>(out Collider col))
             {

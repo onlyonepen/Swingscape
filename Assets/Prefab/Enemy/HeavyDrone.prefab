@@ -4940,6 +4940,8 @@ GameObject:
   - component: {fileID: 1678486836150610688}
   - component: {fileID: 3384044736759245416}
   - component: {fileID: 8710716384500399953}
+  - component: {fileID: 8325001208885870229}
+  - component: {fileID: 5531024169200964862}
   m_Layer: 11
   m_Name: HeavyDrone
   m_TagString: Untagged
@@ -5092,6 +5094,34 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &8325001208885870229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5246498015099704029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51f8e5ed5d649f64180a9c18b0eb1a26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Grappleable
+  type: 2
+--- !u!114 &5531024169200964862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5246498015099704029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9216ea4a84aa97d45a589900536c4cae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Attackable
+  attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
+  hitEffects:
+  - {fileID: 11400000, guid: 8cf711ee78e1aec479a7f0d4feb00218, type: 2}
 --- !u!1 &6047810415933325311
 GameObject:
   m_ObjectHideFlags: 0
@@ -5193,6 +5223,7 @@ GameObject:
   - component: {fileID: 6906032678305774702}
   - component: {fileID: 227703307708415984}
   - component: {fileID: 4917112404405308604}
+  - component: {fileID: 9180422107043519098}
   m_Layer: 13
   m_Name: HeavyDroneMesh
   m_TagString: Untagged
@@ -5248,6 +5279,20 @@ MonoBehaviour:
   DestroyOriginalMeshWhenSplit: 0
   targetMeshFilter: {fileID: 8186375774605587541}
   generateMeshColliders: 1
+--- !u!114 &9180422107043519098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6097021280280110804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9216ea4a84aa97d45a589900536c4cae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Attackable
+  attackType: {fileID: 11400000, guid: 625499c8d4b5492baccfeb3f6e5498e4, type: 2}
+  hitEffects: []
 --- !u!1 &7487246079266140124
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,14 +5,7 @@ public class SwingState : PlayerState
 {
     public override float EnergyRegenRate => 0f;
 
-    private enum GrappleItem
-    {
-        Terrain,
-        Light,
-        Heavy
-    }
-
-    private GrappleItem grapple;
+    private GrappleType grapple;
     
     private Vector3 GrapplePoint;
     private SpringJoint joint;
@@ -28,14 +21,8 @@ public class SwingState : PlayerState
     {
         base.OnStateEnter(gamestateManager);
 
-        int hitLayerBit = 1 << manager.RUD.GrappledObject.layer;
-        if ((hitLayerBit & GlobalReference.Instance.EnemyLayer) != 0)
-        {
-            if ((hitLayerBit & manager.Targeting.HeavyPull) != 0) grapple = GrappleItem.Heavy;
-            else grapple = GrappleItem.Light;
-        }
-        else grapple = GrappleItem.Terrain;
-        
+        grapple = Grappleable.Resolve(manager.RUD.GrappledObject);
+
         manager.PBM.playerCanMove = false;
         SwingDashed = false;
         GrapplePoint = manager.RUD.GrapplePoint;
@@ -44,7 +31,7 @@ public class SwingState : PlayerState
 
         // Calculate initial visual offset
         float currentOffset = manager.GrappleEnemyOffset;
-        if (manager.RUD.GrappledObject != null && ((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0)
+        if (grapple != GrappleType.Normal)
         {
             if (manager.RUD.GrappledObject.TryGetComponent<Collider>(out Collider col))
             {
@@ -74,7 +61,7 @@ public class SwingState : PlayerState
 
         // 1. Determine true physical target
         Vector3 trueTarget = GrapplePoint;
-        if (grapple == GrappleItem.Light || grapple == GrappleItem.Heavy)
+        if (grapple == GrappleType.Light || grapple == GrappleType.Heavy)
         {
             trueTarget = manager.RUD.GrappledObject.transform.position;
             joint.connectedAnchor = trueTarget;
@@ -82,7 +69,7 @@ public class SwingState : PlayerState
 
         // 2. Calculate dynamic offset (checks enemy bounds)
         float currentOffset = manager.GrappleEnemyOffset;
-        if (manager.RUD.GrappledObject != null && ((1 << manager.RUD.GrappledObject.layer) & GlobalReference.Instance.EnemyLayer) != 0)
+        if (grapple != GrappleType.Normal)
         {
             if (manager.RUD.GrappledObject.TryGetComponent<Collider>(out Collider col))
             {
@@ -101,22 +88,22 @@ public class SwingState : PlayerState
         {
             switch (grapple)
             {
-                case GrappleItem.Terrain:
+                case GrappleType.Normal:
                     manager.ChangeState(manager.pullRopeBackState);
                     break;
-                case GrappleItem.Light:
+                case GrappleType.Light:
                     manager.ChangeState(manager.GrapplePullState);
                     break;
-                case GrappleItem.Heavy:
+                case GrappleType.Heavy:
                     manager.ChangeState(manager.GrapplePullinState);
                     break;
             }
         }
-        
+
         if (manager.Input.SprintPressed && manager.Energy.UseEnergy(manager.Energy.GrappleLeapUsage))
         {
             manager.ChangeState(manager.GrappleLeapState);
-            if (grapple == GrappleItem.Light)
+            if (grapple == GrappleType.Light)
             {
                 Vector3 toplayer = manager.transform.position - GrapplePoint;
                 float playerAffectedWeight = 35;

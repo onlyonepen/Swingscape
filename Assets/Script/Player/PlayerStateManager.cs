@@ -69,7 +69,8 @@ public class PlayerStateManager : MonoBehaviour
     public float PullIntoSpeed = 40f;
     public float OvershootYAxis = 3f;
 
-    [HideInInspector] public bool canGrapple;
+    // Open by default: only the CheckpointManager (start-of-run progression gate) locks this.
+    [HideInInspector] public bool canGrapple = true;
 
     [Header("DiedState")]
     public Image redScreenOverlay;

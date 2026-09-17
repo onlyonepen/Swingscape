@@ -1,20 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Script.Enemy;
 using UnityEngine;
 
 public class PlayerAttacking : MonoBehaviour
 {
-    private enum AttackState
-    {
-        Idle,
-        Attack1,
-        Attack2
-    }
-    
     [SerializeField] private PlayerAttackArea attackArea;
-    [SerializeField] private AttackState currentAttackState = AttackState.Idle;
+    [SerializeField] private PlayerAttackState currentPlayerAttackState = PlayerAttackState.Idle;
     [SerializeField] private Animator armAnimator; 
     
     [SerializeField] private Transform attack1Plane;
@@ -27,14 +19,10 @@ public class PlayerAttacking : MonoBehaviour
     [SerializeField] private float attack1HitDelay = 0.2f; 
     [Tooltip("Time in seconds before the Attack 2 hitbox is active")]
     [SerializeField] private float attack2HitDelay = 0.25f;
-    [Tooltip("Time scale held while a melee hit connects (impact slow-mo)")]
-    [SerializeField] private float attackSlowMoScale = 0.5f;
 
     private bool nextAttackQueued = false;
 
     private PlayerManager manager;
-    private int parriableLayer;
-    private LayerMask splitAndDamagable;
 
     /// <summary>Active weapon mode. Null = the built-in melee combo in this class.
     /// Assign via EquipMode() when you add real weapon modes later; the primary-attack
@@ -44,12 +32,6 @@ public class PlayerAttacking : MonoBehaviour
     private void Awake()
     {
         manager = GetComponentInParent<PlayerManager>();
-    }
-
-    private void Start()
-    {
-        parriableLayer    = LayerMask.NameToLayer("Parriable");
-        splitAndDamagable = LayerMask.GetMask("SplittableObject") | GlobalReference.Instance.EnemyLayer;
     }
 
     /// <summary>Swap the active weapon mode. Pass null to fall back to built-in melee.</summary>
@@ -75,11 +57,11 @@ public class PlayerAttacking : MonoBehaviour
 
     private void HandlePrimaryAttack()
     {
-        if (currentAttackState == AttackState.Idle)
+        if (currentPlayerAttackState == PlayerAttackState.Idle)
         {
             StartCombo();
         }
-        else if (currentAttackState == AttackState.Attack1)
+        else if (currentPlayerAttackState == PlayerAttackState.Attack1)
         {
             nextAttackQueued = true;
         }
@@ -87,7 +69,7 @@ public class PlayerAttacking : MonoBehaviour
 
     private void StartCombo()
     {
-        currentAttackState = AttackState.Attack1;
+        currentPlayerAttackState = PlayerAttackState.Attack1;
         nextAttackQueued = false;
 
         armAnimator.Play("Attack1");
@@ -102,8 +84,8 @@ public class PlayerAttacking : MonoBehaviour
     {
         if (nextAttackQueued)
         {
-            HitStopUtil.Instance.ResetBaseTimeScale();
-            currentAttackState = AttackState.Attack2;
+            TimeEffects.ResetBaseTimeScale();
+            currentPlayerAttackState = PlayerAttackState.Attack2;
             nextAttackQueued = false;
 
             armAnimator.Play("Attack2"); 
@@ -115,14 +97,14 @@ public class PlayerAttacking : MonoBehaviour
         }
         else
         {
-            HitStopUtil.Instance.ResetBaseTimeScale();
+            TimeEffects.ResetBaseTimeScale();
             BackToIdle();
         }
     }
 
     private void BackToIdle()
     {
-        currentAttackState = AttackState.Idle;
+        currentPlayerAttackState = PlayerAttackState.Idle;
         nextAttackQueued = false;
         
         armAnimator.Play("Idle");
@@ -142,8 +124,8 @@ public class PlayerAttacking : MonoBehaviour
     private IEnumerator DelayedExecuteAttack(Transform activePlane, float delayTime)
     {
         float timer = 0f;
-        bool slowMoTriggered = false;
-        
+        bool anyTargetLocked = false;
+
         // NEW: The Cache. We will store targets here the exact moment we see them.
         HashSet<GameObject> lockedTargets = new HashSet<GameObject>();
 
@@ -154,31 +136,26 @@ public class PlayerAttacking : MonoBehaviour
             if (attackArea != null)
             {
                 GameObject[] earlyTargets = attackArea.GetTargetsInSwing();
-                
+
                 if (earlyTargets != null && earlyTargets.Length > 0)
                 {
-                    // The moment an enemy gets pulled into the hitbox, drop time!
-                    if (!slowMoTriggered)
-                    {
-                        HitStopUtil.Instance.SetBaseTimeScale(attackSlowMoScale);
-                        slowMoTriggered = true;
-                    }
-                    
                     // Lock them in! Even if you slide past them before the swing finishes, they are marked for the cut.
                     foreach (GameObject target in earlyTargets)
                     {
-                        if (target != null) lockedTargets.Add(target);
+                        if (target == null || !lockedTargets.Add(target)) continue;
+
+                        anyTargetLocked = true;
                     }
                 }
             }
-            
-            if (slowMoTriggered) audioToPlay = "MeleeHit";
+
+            if (anyTargetLocked) audioToPlay = "MeleeHit";
 
             timer += Time.deltaTime;
-            yield return null; 
+            yield return null;
         }
         AudioManager.Instance.PlayAudioByName(audioToPlay, transform.position, true);
-        
+
         // ONE FINAL CHECK: Catch anyone who entered the hitbox on the exact execution frame
         if (attackArea != null)
         {
@@ -187,19 +164,13 @@ public class PlayerAttacking : MonoBehaviour
             {
                 foreach (GameObject target in finalTargets)
                 {
-                    if (target != null) lockedTargets.Add(target);
+                    lockedTargets.Add(target);
                 }
-                
-                // If we somehow hit someone without triggering slow-mo yet, trigger it now for the impact!
-                if (!slowMoTriggered) HitStopUtil.Instance.SetBaseTimeScale(attackSlowMoScale);
             }
         }
 
         // The wind-up is over. Pass the locked targets to the hitbox logic!
         ExecuteHitboxLogic(activePlane, lockedTargets);
-        
-        yield return new WaitForSecondsRealtime(0.05f); // Use realtime so the pause is consistent
-        HitStopUtil.Instance.ResetBaseTimeScale();
     }
 
     // --- UPDATED: Now receives the locked targets ---
@@ -208,33 +179,27 @@ public class PlayerAttacking : MonoBehaviour
         // If the enemy dodged before the radar even caught them, snap time back to normal
         if (targetsToProcess == null || targetsToProcess.Count == 0)
         {
-            HitStopUtil.Instance.ResetBaseTimeScale();
+            TimeEffects.ResetBaseTimeScale();
             return;
         }
 
-        // Keep this internal HashSet to prevent multiple child colliders on the SAME enemy from triggering multiple cuts
+        // Keep these internal HashSets to prevent multiple child colliders on the SAME target from triggering multiple hits
         HashSet<IDamagable> hitTargets = new HashSet<IDamagable>();
-        
+        HashSet<Rigidbody> knockedBack = new HashSet<Rigidbody>();
+        HashSet<Attackable> effectsFired = new HashSet<Attackable>();
+
         foreach (GameObject obj in targetsToProcess)
         {
-            if (obj == null) continue; 
-    
-            if (((1 << obj.layer) & splitAndDamagable) != 0)
-            {
-                var damagable = obj.GetComponentInParent<IDamagable>();
+            if (obj == null) continue;
 
-                if (damagable != null && hitTargets.Add(damagable))
-                {
-                    damagable.SplitDeath(activePlane);
-                }
-            }
-            else if (((1 << obj.layer) & parriableLayer) != 0)
-            {
-                if (obj.TryGetComponent(out IParriable parriable))
-                {
-                    parriable.Parried();
-                }
-            }
+            var attackable = obj.GetComponentInParent<Attackable>();
+            if (attackable == null) continue;
+
+            // Fire this target's hit effects (slow-mo, hit-stop, ...) exactly when the attack lands.
+            if (effectsFired.Add(attackable)) attackable.TriggerHitEffects();
+
+            var ctx = new AttackContext(obj, manager.transform.position, activePlane, hitTargets, knockedBack);
+            attackable.ApplyAttack(ctx);
         }
     }
 }

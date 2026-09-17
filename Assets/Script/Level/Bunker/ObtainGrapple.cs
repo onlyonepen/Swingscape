@@ -6,6 +6,7 @@ public class ObtainGrapple : MonoBehaviour
     public LayerMask PlayerLayer;
     public GameObject[] ToSwitchActive;
     public OSTController ostController;
+    [SerializeField] private bool grantOnStart = false; // Check to grant grapple immediately, skipping the trigger (test scenes)
     private bool _hasTriggered = false; // Safety flag
 
     private void Start()
@@ -17,8 +18,11 @@ public class ObtainGrapple : MonoBehaviour
             {
                 obj.SetActive(true);
             }
-            ostController.PlayOST();
+            ostController?.PlayOST();
+            return;
         }
+
+        if (grantOnStart) Grant();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -28,16 +32,21 @@ public class ObtainGrapple : MonoBehaviour
 
         if ((1 << other.gameObject.layer & PlayerLayer) != 0)
         {
-            _hasTriggered = true;
-            GlobalReference.Instance.player.Locomotion.canGrapple = true;
-            GameValue.ObtainedGrapple = true;
-            
-            // Start the optimized activation
-            StartCoroutine(EnableObjectsGradually());
-            
-            ostController.PlayOST();
-            gameObject.SetActive(false);
+            Grant();
         }
+    }
+
+    private void Grant()
+    {
+        _hasTriggered = true;
+        GlobalReference.Instance.player.Locomotion.canGrapple = true;
+        GameValue.ObtainedGrapple = true;
+
+        // Start the optimized activation
+        StartCoroutine(EnableObjectsGradually());
+
+        ostController?.PlayOST();
+        gameObject.SetActive(false);
     }
 
     private IEnumerator EnableObjectsGradually()

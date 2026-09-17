@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 2874823847362989578}
   - component: {fileID: 7023009630597327264}
   - component: {fileID: 2442969769038734055}
+  - component: {fileID: 1558526437153800153}
+  - component: {fileID: 4541240773166928546}
   m_Layer: 10
   m_Name: LightDrone
   m_TagString: Untagged
@@ -105,6 +107,34 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &1558526437153800153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1014428087099054674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51f8e5ed5d649f64180a9c18b0eb1a26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Grappleable
+  type: 1
+--- !u!114 &4541240773166928546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1014428087099054674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9216ea4a84aa97d45a589900536c4cae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Attackable
+  attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
+  hitEffects:
+  - {fileID: 11400000, guid: 8cf711ee78e1aec479a7f0d4feb00218, type: 2}
 --- !u!1 &3755157630182815520
 GameObject:
   m_ObjectHideFlags: 0

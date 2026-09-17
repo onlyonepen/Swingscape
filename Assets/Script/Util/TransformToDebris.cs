@@ -1,16 +1,17 @@
 using UnityEngine;
+using VInspector;
 
-public class Transformtodebris : MonoBehaviour
+[RequireComponent(typeof(Prefracture), typeof(MeshCollider))]
+public class TransformToDebris : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [Button]
+    public void Break()
     {
-        
+        GetComponent<Prefracture>().ComputeFracture();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void FractureCallback()
     {
-        
+        Debug.Log("asa");
     }
 }

@@ -4,8 +4,6 @@ using UnityEngine;
 public class PlayerAttackArea : MonoBehaviour
 {
     [Header("Hitbox Settings")]
-    [SerializeField] private LayerMask attackableLayer;
-    
     // We broke these out to act exactly like a Capsule's Height/Radius!
     [Tooltip("How far forward the attack reaches (Capsule Height)")]
     [SerializeField] private float swingReach = 3f; 
@@ -27,12 +25,16 @@ public class PlayerAttackArea : MonoBehaviour
         // Construct the size vector dynamically from our separated floats
         Vector3 boxDimensions = new Vector3(swingWidth, swingThickness, swingReach);
 
+        // Query everything except the player; Attackable component presence (checked downstream)
+        // decides what actually reacts to the hit, not a layer.
+        LayerMask queryMask = ~GlobalReference.Instance.playerLayer;
+
         // Perform an instantaneous physics check
         Collider[] hits = Physics.OverlapBox(
             hitboxCenter.position,
             boxDimensions / 2f, // OverlapBox requires half-extents (size divided by 2)
             hitboxCenter.rotation,
-            attackableLayer
+            queryMask
         );
 
         List<GameObject> validTargets = new List<GameObject>();

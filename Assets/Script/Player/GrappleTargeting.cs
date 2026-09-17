@@ -2,20 +2,22 @@ using UnityEngine;
 
 /// <summary>
 /// Owns grapple target selection: the aim-assisted ray/sphere cast that decides what
-/// the player will grapple, the layer masks that classify grapple targets, and the
-/// on-screen prediction reticle. Extracted from PlayerStateManager so the state
-/// machine stays focused on state logic.
+/// the player will grapple (terrain via the Swingable layer, enemies via the Grappleable
+/// component) and the on-screen prediction reticle. Extracted from PlayerStateManager so
+/// the state machine stays focused on state logic.
 /// </summary>
 public class GrappleTargeting : MonoBehaviour
 {
     [Header("Reticle")]
-    public Transform predictionPoint;
+    [Tooltip("UI element (child of the main HUD canvas) that acts as the lock-on indicator.")]
+    public RectTransform predictionPoint;
+    [Tooltip("The main HUD canvas predictionPoint lives on. Its render mode decides how the world point is projected.")]
+    public Canvas targetCanvas;
 
     [Header("Range & target layers")]
     public float GrappleMaxDistance;
+    [Tooltip("Terrain/swing-point layer. Enemy targets are found by Grappleable component presence, not a layer.")]
     public LayerMask Swingable;
-    public LayerMask Pullable;
-    public LayerMask HeavyPull;
 
     [Header("Aim assist")]
     public float minAimAssistRadius = 0.8f;
@@ -40,9 +42,10 @@ public class GrappleTargeting : MonoBehaviour
     /// </summary>
     public RaycastHit Predict()
     {
-        LayerMask assistPriority = HeavyPull | Pullable; // Enemies / Pullables
-        LayerMask allGrappleMasks = Swingable | assistPriority;
         LayerMask obstacleMask = GlobalReference.Instance.TerrainLayer;
+        // Everything except the player: enemy targets are told apart from plain scenery by
+        // Grappleable component presence, not a layer, so the query mask stays broad.
+        LayerMask queryMask = ~GlobalReference.Instance.playerLayer;
 
         // --- 1. DIRECT RAYCAST ---
         RaycastHit directHitEnemy = new RaycastHit();
@@ -52,18 +55,19 @@ public class GrappleTargeting : MonoBehaviour
         bool foundDirectSwing = false;
 
         // Check perfectly down the center first
-        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit tempDirect, GrappleMaxDistance, allGrappleMasks | obstacleMask))
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit tempDirect, GrappleMaxDistance, queryMask))
         {
-            int hitLayer = 1 << tempDirect.collider.gameObject.layer;
+            GameObject hitObj = tempDirect.collider.gameObject;
+            bool isSwingable = ((1 << hitObj.layer) & Swingable) != 0;
 
             // SWAPPED: Check if the direct hit is terrain/swingable FIRST
-            if ((hitLayer & Swingable) != 0)
+            if (isSwingable)
             {
                 directHitSwing = tempDirect;
                 foundDirectSwing = true;
             }
-            // Then check if the direct hit is an enemy
-            else if ((hitLayer & assistPriority) != 0)
+            // Then check if the direct hit is a Grappleable enemy
+            else if (Grappleable.Resolve(hitObj) != GrappleType.Normal)
             {
                 directHitEnemy = tempDirect;
                 foundDirectEnemy = true;
@@ -76,7 +80,7 @@ public class GrappleTargeting : MonoBehaviour
             maxAimAssistRadius,
             cam.transform.forward,
             GrappleMaxDistance,
-            allGrappleMasks
+            queryMask
         );
 
         RaycastHit bestAssistEnemyHit = new RaycastHit();
@@ -116,10 +120,15 @@ public class GrappleTargeting : MonoBehaviour
                 }
             }
 
+            GameObject candidate = hit.collider.gameObject;
+            bool isSwingable = ((1 << candidate.layer) & Swingable) != 0;
+            bool isEnemy = !isSwingable && Grappleable.Resolve(candidate) != GrappleType.Normal;
+
+            // Not on the swingable layer and no Grappleable component: not a valid grapple candidate at all
+            if (!isSwingable && !isEnemy) continue;
+
             Vector3 directionToHit = localHitPoint.normalized;
             float alignmentScore = Vector3.Dot(cam.transform.forward, directionToHit);
-
-            bool isEnemy = ((1 << hit.collider.gameObject.layer) & assistPriority) != 0;
 
             // Separate highest scoring enemy and highest scoring terrain
             if (isEnemy)
@@ -172,10 +181,28 @@ public class GrappleTargeting : MonoBehaviour
         }
 
         // --- 4. VISUAL FEEDBACK ---
+        // Project the world hit point onto the HUD canvas so the indicator stays a fixed
+        // screen size instead of scaling/skewing with distance like a world-space object would.
         if (hasValidHit)
         {
-            predictionPoint.gameObject.SetActive(true);
-            predictionPoint.position = finalHit.point;
+            Vector3 screenPoint = cam.WorldToScreenPoint(finalHit.point);
+            if (screenPoint.z > 0) // in front of the camera
+            {
+                Camera canvasCam = targetCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : targetCanvas.worldCamera;
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)targetCanvas.transform, screenPoint, canvasCam, out Vector2 localPoint))
+                {
+                    predictionPoint.gameObject.SetActive(true);
+                    predictionPoint.anchoredPosition = localPoint;
+                }
+                else
+                {
+                    predictionPoint.gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                predictionPoint.gameObject.SetActive(false);
+            }
         }
         else
         {
