@@ -10,7 +10,7 @@ using VInspector;
 namespace Script.Enemy
 {
     [RequireComponent(typeof(Grappleable), typeof(Attackable))]
-    public class BaseEnemy : MonoBehaviour, IDamagable
+    public class BaseEnemy : MonoBehaviour, ISliceable
     {
         public EnemyType Type;
         [SerializeField] internal EnemyStatSO Stat;
@@ -19,9 +19,6 @@ namespace Script.Enemy
         [SerializeField] internal Transform Guntip;
         [SerializeField] internal GameObject ProjectilePrefab;
         [SerializeField] internal ParticleSystem ChargeUpParticles;
-        
-        //test
-        [SerializeField] private Splittable splittable;
 
         /// <summary>Fired by any enemy the moment it dies. Subscribe to reward the player, update score, etc.</summary>
         public static event Action OnAnyEnemyDied;
@@ -67,17 +64,21 @@ namespace Script.Enemy
             attackable.TriggerHitEffects();
         }
         
-        public void SplitDeath(Transform plane)
+        public void OnSliceStart()
         {
-            // 1. Make the enemy untargetable immediately so the player can't hit it again.
+            // Make the enemy untargetable immediately so the player can't hit it again.
             // (This ensures our new OverlapBox cast won't catch it while it's asynchronously splitting)
             if (TryGetComponent<Collider>(out var col))
             {
                 col.enabled = false;
             }
 
-            // 2. Start the split. We will call Death() AFTER the split finishes.
-            SplitObject(plane);
+            ChangeState(stateFactory.CreateStaggerState(this));
+        }
+
+        public void OnSliceComplete(SplitResult result)
+        {
+            StartCoroutine(WaitAndDie());
         }
 
         public void Death()
@@ -112,36 +113,6 @@ namespace Script.Enemy
         {
             staggerTime = time;
             ChangeState(stateFactory.CreateStaggerState(this));
-        }
-        public void SplitObject(Transform _plane)
-        {
-            ChangeState(stateFactory.CreateStaggerState(this));
-            PointPlane plane = new PointPlane(_plane.position, _plane.rotation);
-    
-            float splitForce = 15f; 
-            Vector3 originalLinearVel = rb.linearVelocity; 
-            Vector3 originalAngularVel = rb.angularVelocity;
-
-            splittable.SplitAsync(plane, (SplitResult result) =>
-            {
-                Rigidbody r1 = result.posObject.AddComponent<Rigidbody>();
-                Rigidbody r2 = result.negObject.AddComponent<Rigidbody>();
-
-                r1.linearVelocity = originalLinearVel;
-                r1.angularVelocity = originalAngularVel;
-
-                r2.linearVelocity = originalLinearVel;
-                r2.angularVelocity = originalAngularVel;
-
-                r1.AddForce(plane.normal * splitForce, ForceMode.Impulse);
-                r2.AddForce(-plane.normal * splitForce, ForceMode.Impulse);
-
-                result.posObject.transform.parent = null;
-                result.negObject.transform.parent = null;
-
-                // 3. Start a short Coroutine to finish the death sequence safely
-            });
-            StartCoroutine(WaitAndDie());
         }
         private IEnumerator WaitAndDie()
         {

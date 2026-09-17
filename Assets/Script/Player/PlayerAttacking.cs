@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using JL.Splitting;
 using UnityEngine;
 
 public class PlayerAttacking : MonoBehaviour
@@ -184,7 +185,7 @@ public class PlayerAttacking : MonoBehaviour
         }
 
         // Keep these internal HashSets to prevent multiple child colliders on the SAME target from triggering multiple hits
-        HashSet<IDamagable> hitTargets = new HashSet<IDamagable>();
+        HashSet<Splittable> hitTargets = new HashSet<Splittable>();
         HashSet<Rigidbody> knockedBack = new HashSet<Rigidbody>();
         HashSet<Attackable> effectsFired = new HashSet<Attackable>();
 

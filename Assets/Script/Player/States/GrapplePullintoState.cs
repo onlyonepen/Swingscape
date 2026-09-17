@@ -70,7 +70,7 @@ public class GrapplePullintoState : PlayerState
         
         if (percent >= 0.95f)
         {
-            if (manager.RUD.GrappledObject.TryGetComponent<IDamagable>(out var component)) 
+            if (manager.RUD.GrappledObject.TryGetComponent<ISliceable>(out var component))
             {
                 //component.SplitDeath();
             }

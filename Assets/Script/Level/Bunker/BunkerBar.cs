@@ -2,89 +2,47 @@ using JL.Splitting;
 using UnityEngine;
 
 [RequireComponent(typeof(Attackable))]
-public class ContinueSplittable : MonoBehaviour, IDamagable
+public class ContinueSplittable : MonoBehaviour, ISliceable
 {
     [Header("Slice Juice")]
     [SerializeField] private float pushForce = 5f; // Tweak this in the inspector for stronger/weaker pushes
 
-    public void SplitDeath(Transform plane)
+    public void OnSliceStart() { }
+
+    public void OnSliceComplete(SplitResult result)
     {
-        PointPlane PPData = new PointPlane(plane.position, plane.rotation);
+        bool hasPlayer = GlobalReference.Instance != null && GlobalReference.Instance.player != null;
+        Vector3 playerPosition = hasPlayer ? GlobalReference.Instance.player.transform.position : Vector3.zero;
 
-        // 1. Safely attempt to get the Splittable component
-        if (TryGetComponent<Splittable>(out var splittable))
+        if (!hasPlayer)
         {
-            splittable.SplitAsync(PPData, (SplitResult result) =>
-            {
-                // Cache the player position safely to avoid redundant lookups inside the blocks
-                Vector3 playerPosition = Vector3.zero;
-                bool hasPlayer = GlobalReference.Instance != null && GlobalReference.Instance.player != null;
-                
-                if (hasPlayer)
-                {
-                    playerPosition = GlobalReference.Instance.player.transform.position;
-                }
-                else
-                {
-                    Debug.LogWarning("globalreference.instance or player is missing! Pieces won't be pushed outward.");
-                }
-
-                // 3. Process the positive object AND all its children
-                if (result.posObject != null)
-                {
-                    // Get all rigidbodies on this object and any nested children
-                    Rigidbody[] posRigidbodies = result.posObject.GetComponentsInChildren<Rigidbody>();
-                    
-                    if (posRigidbodies.Length > 0)
-                    {
-                        foreach (Rigidbody rb in posRigidbodies)
-                        {
-                            rb.constraints = RigidbodyConstraints.None;
-                            
-                            if (hasPlayer)
-                            {
-                                // Calculate direction based on the specific child's position
-                                Vector3 pushDir = (rb.transform.position - playerPosition).normalized;
-                                rb.AddForce(pushDir * pushForce, ForceMode.Impulse);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"No Rigidbodies found on posObject or its children: {result.posObject.name}");
-                    }
-                }
-
-                // 4. Process the negative object AND all its children
-                if (result.negObject != null)
-                {
-                    // Get all rigidbodies on this object and any nested children
-                    Rigidbody[] negRigidbodies = result.negObject.GetComponentsInChildren<Rigidbody>();
-
-                    if (negRigidbodies.Length > 0)
-                    {
-                        foreach (Rigidbody rb in negRigidbodies)
-                        {
-                            rb.constraints = RigidbodyConstraints.None;
-                            
-                            if (hasPlayer)
-                            {
-                                // Calculate direction based on the specific child's position
-                                Vector3 pushDir = (rb.transform.position - playerPosition).normalized;
-                                rb.AddForce(pushDir * pushForce, ForceMode.Impulse);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"No Rigidbodies found on negObject or its children: {result.negObject.name}");
-                    }
-                }
-            });
+            Debug.LogWarning("GlobalReference.Instance or player is missing! Pieces won't be pushed outward.");
         }
-        else
+
+        PushApart(result.posObject, playerPosition, hasPlayer);
+        PushApart(result.negObject, playerPosition, hasPlayer);
+    }
+
+    private void PushApart(GameObject splitObject, Vector3 playerPosition, bool hasPlayer)
+    {
+        if (splitObject == null) return;
+
+        Rigidbody[] rigidbodies = splitObject.GetComponentsInChildren<Rigidbody>();
+        if (rigidbodies.Length == 0)
         {
-            Debug.LogError($"Splittable component missing on {gameObject.name}. Cannot execute SplitAsync.");
+            Debug.LogWarning($"No Rigidbodies found on {splitObject.name} or its children");
+            return;
+        }
+
+        foreach (Rigidbody rb in rigidbodies)
+        {
+            rb.constraints = RigidbodyConstraints.None;
+
+            if (hasPlayer)
+            {
+                Vector3 pushDir = (rb.transform.position - playerPosition).normalized;
+                rb.AddForce(pushDir * pushForce, ForceMode.Impulse);
+            }
         }
     }
 }

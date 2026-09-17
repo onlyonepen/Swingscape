@@ -60,17 +60,16 @@ public class GrappleTargeting : MonoBehaviour
             GameObject hitObj = tempDirect.collider.gameObject;
             bool isSwingable = ((1 << hitObj.layer) & Swingable) != 0;
 
-            // SWAPPED: Check if the direct hit is terrain/swingable FIRST
-            if (isSwingable)
-            {
-                directHitSwing = tempDirect;
-                foundDirectSwing = true;
-            }
-            // Then check if the direct hit is a Grappleable enemy
-            else if (Grappleable.Resolve(hitObj) != GrappleType.Normal)
+            // Grappleable enemies take priority over terrain even on the direct raycast
+            if (Grappleable.Resolve(hitObj) != GrappleType.Normal)
             {
                 directHitEnemy = tempDirect;
                 foundDirectEnemy = true;
+            }
+            else if (isSwingable)
+            {
+                directHitSwing = tempDirect;
+                foundDirectSwing = true;
             }
         }
 
@@ -122,7 +121,7 @@ public class GrappleTargeting : MonoBehaviour
 
             GameObject candidate = hit.collider.gameObject;
             bool isSwingable = ((1 << candidate.layer) & Swingable) != 0;
-            bool isEnemy = !isSwingable && Grappleable.Resolve(candidate) != GrappleType.Normal;
+            bool isEnemy = Grappleable.Resolve(candidate) != GrappleType.Normal;
 
             // Not on the swingable layer and no Grappleable component: not a valid grapple candidate at all
             if (!isSwingable && !isEnemy) continue;
@@ -155,25 +154,23 @@ public class GrappleTargeting : MonoBehaviour
         RaycastHit finalHit = new RaycastHit();
         bool hasValidHit = false;
 
-        // SWAPPED: 1. Terrain in Direct Raycast (Intentional Traversal)
-        if (foundDirectSwing)
-        {
-            finalHit = directHitSwing;
-            hasValidHit = true;
-        }
-        // SWAPPED: 2. Enemy in Direct Raycast (Intentional Combat)
-        else if (foundDirectEnemy)
+        // Grappleable enemies always outrank terrain: 1. direct enemy, 2. assisted enemy,
+        // 3. direct terrain, 4. assisted terrain.
+        if (foundDirectEnemy)
         {
             finalHit = directHitEnemy;
             hasValidHit = true;
         }
-        // 3. Enemy in Aim Assist (Forgiving Combat)
         else if (foundAssistEnemy)
         {
             finalHit = bestAssistEnemyHit;
             hasValidHit = true;
         }
-        // 4. Terrain in Aim Assist (Forgiving Traversal)
+        else if (foundDirectSwing)
+        {
+            finalHit = directHitSwing;
+            hasValidHit = true;
+        }
         else if (foundAssistSwing)
         {
             finalHit = bestAssistSwingHit;

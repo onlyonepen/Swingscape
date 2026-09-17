@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using JL.Splitting;
 using UnityEngine;
 
 /// <summary>Everything an AttackTypeSO needs to resolve a single hit. Built once per swing by
@@ -11,17 +12,17 @@ public readonly struct AttackContext
     public readonly Transform ImpactPlane;
 
     // Dedup sets shared across the whole swing so multiple child colliders on the same
-    // target don't double-apply damage/knockback.
-    public readonly HashSet<IDamagable> DamagedThisSwing;
+    // target don't double-apply slicing/knockback.
+    public readonly HashSet<Splittable> SlicedThisSwing;
     public readonly HashSet<Rigidbody> KnockedBackThisSwing;
 
     public AttackContext(GameObject hitObject, Vector3 attackerPosition, Transform impactPlane,
-        HashSet<IDamagable> damagedThisSwing, HashSet<Rigidbody> knockedBackThisSwing)
+        HashSet<Splittable> slicedThisSwing, HashSet<Rigidbody> knockedBackThisSwing)
     {
         HitObject = hitObject;
         AttackerPosition = attackerPosition;
         ImpactPlane = impactPlane;
-        DamagedThisSwing = damagedThisSwing;
+        SlicedThisSwing = slicedThisSwing;
         KnockedBackThisSwing = knockedBackThisSwing;
     }
 }
