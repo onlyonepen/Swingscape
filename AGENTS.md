@@ -2,7 +2,7 @@
 - Project name: Swingscape
 - Unity version: Unity 6000.3.8f1
 - Active game object:
-  - Name: KnockbackCube
+  - Name: Wall Lights
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
