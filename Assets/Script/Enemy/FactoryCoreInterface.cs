@@ -7,4 +7,5 @@ public interface IEnemyStateFactory
     EnemyBaseState CreateAggroState(BaseEnemy enemy);
     EnemyBaseState CreateAttackState(BaseEnemy enemy);
     EnemyBaseState CreateStaggerState(BaseEnemy enemy);
+    EnemyBaseState CreateDeadState(BaseEnemy enemy);
 }

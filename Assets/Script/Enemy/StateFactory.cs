@@ -2,6 +2,7 @@
 using Script.Enemy.State;
 using Script.Enemy.State.Aggro;
 using Script.Enemy.State.Attack;
+using Script.Enemy.State.Death;
 using Script.Enemy.State.GetPull;
 using Script.Enemy.State.Idle;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace Script.Enemy
         public EnemyBaseState CreateIdleState(BaseEnemy enemy)    => new DroneIdle(enemy);
         public EnemyBaseState CreateAggroState(BaseEnemy enemy)   => new DroneAggro(enemy);
         public EnemyBaseState CreateStaggerState(BaseEnemy enemy) => new DroneStagger(enemy);
+        public EnemyBaseState CreateDeadState(BaseEnemy enemy)    => new DroneDead(enemy);
         public abstract EnemyBaseState CreateAttackState(BaseEnemy enemy);
     }
 

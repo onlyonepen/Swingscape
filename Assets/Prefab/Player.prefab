@@ -464,15 +464,9 @@ MonoBehaviour:
   GrappleMaxDistance: 60
   Swingable:
     serializedVersion: 2
-    m_Bits: 3136
-  Pullable:
-    serializedVersion: 2
-    m_Bits: 1024
-  HeavyPull:
-    serializedVersion: 2
-    m_Bits: 2048
-  minAimAssistRadius: 0.8
-  maxAimAssistRadius: 5
+    m_Bits: 64
+  minAimAssistRadius: 1
+  maxAimAssistRadius: 8
 --- !u!1 &997458973062282323
 GameObject:
   m_ObjectHideFlags: 0
@@ -1309,7 +1303,7 @@ Transform:
   m_GameObject: {fileID: 2186194449738860050}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.06999993, z: 2.41}
+  m_LocalPosition: {x: 0, y: -0.06999993, z: 0.97}
   m_LocalScale: {x: 4.5647, y: 4.5647, z: 4.5647}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -1328,10 +1322,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e12765d9d1c5384fbb9bd7d43798894, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAttackArea
-  attackableLayer:
-    serializedVersion: 2
-    m_Bits: 11520
-  swingReach: 4.19
+  swingReach: 2.14
   swingWidth: 1.76
   swingThickness: 1.9
   hitboxCenter: {fileID: 8745826695104165682}
@@ -2105,14 +2096,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAttacking
   attackArea: {fileID: 5261828787026687811}
-  currentAttackState: 0
+  currentPlayerAttackState: 0
   armAnimator: {fileID: 5501336585378686751}
   attack1Plane: {fileID: 98881908030721516}
   attack2Plane: {fileID: 1618543615186966793}
   attack1HitDelay: 0.2
   attack2HitDelay: 0.06
-  attackSlowMoScale: 0.5
-  knockbackForce: 10
 --- !u!1 &5410774639803673906
 GameObject:
   m_ObjectHideFlags: 0
@@ -2672,7 +2661,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0

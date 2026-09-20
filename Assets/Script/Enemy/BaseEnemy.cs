@@ -53,6 +53,7 @@ namespace Script.Enemy
             currentState.OnStateEnter();
         }
 
+        
         private void Update()
         {
             currentState.OnStateUpdate();
@@ -73,20 +74,41 @@ namespace Script.Enemy
                 col.enabled = false;
             }
 
-            ChangeState(stateFactory.CreateStaggerState(this));
+            // Use the terminal Dead state (not Stagger) so the enemy can't wake back up into
+            // Aggro/Idle mid-air while the async split is still running.
+            ChangeState(stateFactory.CreateDeadState(this));
         }
+
+        private GameObject slicedPosObject;
+        private GameObject slicedNegObject;
 
         public void OnSliceComplete(SplitResult result)
         {
+            slicedPosObject = result.posObject;
+            slicedNegObject = result.negObject;
             StartCoroutine(WaitAndDie());
+        }
+
+        // Called once by DroneDead.OnStateEnter — i.e. the moment the enemy first enters the
+        // death state, not when Death() finishes tidying up frames later.
+        public void PlayDeathParticles()
+        {
+            if (DeathParticles == null) return;
+            DeathParticles.gameObject.SetActive(false);
+            DeathParticles.gameObject.SetActive(true);
         }
 
         public void Death()
         {
-            DeathParticles.transform.parent = null;
-            DeathParticles.Play();
-            ChangeState(stateFactory.CreateStaggerState(this));
             OnAnyEnemyDied?.Invoke();
+
+            // The split halves get reparented to the scene root when they're cut (so they can
+            // fly apart with physics), so they're no longer children of this object by the time
+            // it deactivates below — clean them up after a delay (instead of instantly) so the
+            // debris is actually visible flying apart rather than vanishing with the enemy.
+            const float debrisLifetime = 3f;
+            if (slicedPosObject != null) Destroy(slicedPosObject, debrisLifetime);
+            if (slicedNegObject != null) Destroy(slicedNegObject, debrisLifetime);
 
             gameObject.SetActive(false);
         }
