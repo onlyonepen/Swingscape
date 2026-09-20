@@ -13,3 +13,13 @@ MonoBehaviour:
   m_Name: Knockback
   m_EditorClassIdentifier: Assembly-CSharp::KnockbackAttackTypeSO
   force: 10
+  damageArmSpeed: 5
+  damageDisarmSpeed: 1
+  damageDisarmDelay: 2
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 128
+  retargetMaxDistance: 40
+  retargetMinRadius: 0.8
+  retargetMaxRadius: 20
+  retargetForce: 10

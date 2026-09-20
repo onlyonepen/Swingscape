@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 1135785078293583655}
   - component: {fileID: 5628099620382853966}
   - component: {fileID: 4489657750888236782}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: LightDrone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -202,7 +202,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7769608172827340445}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Guntip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -236,7 +236,7 @@ GameObject:
   - component: {fileID: 6617354952122245157}
   - component: {fileID: 8390850894869232280}
   - component: {fileID: 5825969700401641637}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: ChargeUpShot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5072,13 +5072,13 @@ GameObject:
   - component: {fileID: 7830987936418827204}
   - component: {fileID: 2426199772027200712}
   - component: {fileID: 822754044734798835}
-  m_Layer: 11
+  m_Layer: 7
   m_Name: DeathParticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7830987936418827204
 Transform:
   m_ObjectHideFlags: 0

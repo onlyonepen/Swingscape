@@ -1069,7 +1069,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 16255
+    m_Bits: 4294967295
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -1303,8 +1303,8 @@ Transform:
   m_GameObject: {fileID: 2186194449738860050}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.06999993, z: 0.97}
-  m_LocalScale: {x: 4.5647, y: 4.5647, z: 4.5647}
+  m_LocalPosition: {x: -0, y: -0.1, z: 1.36}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8745826695104165682}
@@ -1322,9 +1322,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e12765d9d1c5384fbb9bd7d43798894, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAttackArea
-  swingReach: 2.14
+  swingReach: 2.42
   swingWidth: 1.76
-  swingThickness: 1.9
+  swingThickness: 1.27
   hitboxCenter: {fileID: 8745826695104165682}
 --- !u!33 &1574398169640285773
 MeshFilter:

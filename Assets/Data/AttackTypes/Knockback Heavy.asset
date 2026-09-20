@@ -13,3 +13,14 @@ MonoBehaviour:
   m_Name: Knockback Heavy
   m_EditorClassIdentifier: Assembly-CSharp::KnockbackAttackTypeSO
   force: 30
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 128
+  retargetMaxDistance: 40
+  retargetMinRadius: 0
+  retargetMaxRadius: 10
+  retargetForce: 80
+  damageArmSpeed: 5
+  damageDisarmSpeed: 1
+  damageDisarmDelay: 2
+  debugAim: 1

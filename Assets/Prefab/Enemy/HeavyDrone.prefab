@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2145361032602340716}
   - component: {fileID: 7531648190450897050}
   - component: {fileID: 5093345158103779067}
-  m_Layer: 11
+  m_Layer: 7
   m_Name: Gun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 311987528387826369}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Guntip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 5775899598167601227}
   - component: {fileID: 3961203391776544540}
   - component: {fileID: 5269689312989579333}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: ChargeUpShot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4975,7 +4975,7 @@ GameObject:
   - component: {fileID: 8710716384500399953}
   - component: {fileID: 2783824256878392132}
   - component: {fileID: 7558641129728132334}
-  m_Layer: 11
+  m_Layer: 7
   m_Name: HeavyDrone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5163,7 +5163,7 @@ GameObject:
   - component: {fileID: 5600786400039726563}
   - component: {fileID: 901919530481438803}
   - component: {fileID: 5477100187824629260}
-  m_Layer: 11
+  m_Layer: 7
   m_Name: DeathParticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}

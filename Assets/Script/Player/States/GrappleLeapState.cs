@@ -109,23 +109,8 @@ public class GrappleLeapState : PlayerState
         manager.rb.linearVelocity = calculateJumpVelocity(manager.transform.position, manager.RUD.GrapplePoint, highestPointOnArc);
     }
 
-    private Vector3 calculateJumpVelocity(Vector3 startPoint, Vector3 endPoint, float trajectoryHeight)
-    {
-        float gravity = Physics.gravity.y;
-        float displacementY = endPoint.y - startPoint.y;
-        Vector3 displacementXZ = new Vector3(endPoint.x - startPoint.x, 0f, endPoint.z - startPoint.z);
-
-        float optimizedHeight = Mathf.Max(displacementY + 0.1f, trajectoryHeight);
-
-        Vector3 velocityY = Vector3.up * Mathf.Sqrt(-2 * gravity * optimizedHeight);
-
-        float timeUp = Mathf.Sqrt(-2 * optimizedHeight / gravity);
-        float timeDown = Mathf.Sqrt(2 * (displacementY - optimizedHeight) / gravity);
-
-        Vector3 velocityXZ = displacementXZ / (timeUp + timeDown);
-
-        return velocityXZ + velocityY;
-    }
+    private Vector3 calculateJumpVelocity(Vector3 startPoint, Vector3 endPoint, float trajectoryHeight) =>
+        ProjectileMath.CalculateArcVelocity(startPoint, endPoint, trajectoryHeight);
 
     public int segmentCount = 30;
     public float maxTugAmplitude = .75f; 
