@@ -27,7 +27,7 @@ public class GrapplePullintoState : PlayerState
         
         initialPlayerPosition = manager.transform.position;
         initialEnemyDistance = Vector3.Distance(initialPlayerPosition, manager.RUD.GrappledObject.transform.position);
-        expectedDuration = initialEnemyDistance / manager.PullIntoSpeed;
+        expectedDuration = initialEnemyDistance / manager.grappleStats.PullIntoSpeed;
         
         if (manager.RUD.GrappledObject.TryGetComponent<BaseEnemy>( out var component))
         {
@@ -38,7 +38,7 @@ public class GrapplePullintoState : PlayerState
         
 
         Vector3 pullDirection = (manager.RUD.GrappledObject.transform.position - initialPlayerPosition).normalized;
-        manager.rb.linearVelocity = pullDirection * manager.PullIntoSpeed;
+        manager.rb.linearVelocity = pullDirection * manager.grappleStats.PullIntoSpeed;
     }
 
     public override void OnStateUpdate()
@@ -49,7 +49,7 @@ public class GrapplePullintoState : PlayerState
         manager.GuntipPointToGrapple();
         
         Vector3 trueTarget = manager.RUD.GrappledObject.transform.position;
-        float currentOffset = manager.GrappleEnemyOffset;
+        float currentOffset = manager.grappleStats.GrappleEnemyOffset;
 
         // Check if object is an enemy and dynamically calculate offset from collider size
         if (Grappleable.Resolve(manager.RUD.GrappledObject) != GrappleType.Normal)
@@ -98,7 +98,7 @@ public class GrapplePullintoState : PlayerState
         manager.PBM.FloatingCapsuleActive = true;
 
         Vector3 pullDirection = (manager.RUD.GrappledObject.transform.position - initialPlayerPosition).normalized;
-        manager.rb.linearVelocity = pullDirection * manager.PullIntoSpeed * 0.8f;
+        manager.rb.linearVelocity = pullDirection * manager.grappleStats.PullIntoSpeed * 0.8f;
         
         //if(grappleEnemy) enemy.SplitDeath();
     }

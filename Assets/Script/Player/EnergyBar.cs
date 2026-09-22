@@ -24,7 +24,7 @@ public class EnergyBar : MonoBehaviour
 
     public void UpdateEnergyBar()
     {
-        float barAmount = (energy.currentEnergy / energy.MaxEnergy) * MaxBar;
+        float barAmount = (energy.currentEnergy / energy.stats.MaxEnergy) * MaxBar;
         //AddTween
         bar.fillAmount = barAmount;
     }

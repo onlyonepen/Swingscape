@@ -15,13 +15,11 @@ public class GrappleTargeting : MonoBehaviour
     public Canvas targetCanvas;
 
     [Header("Range & target layers")]
-    public float GrappleMaxDistance;
     [Tooltip("Terrain/swing-point layer. Enemy targets are found by Grappleable component presence, not a layer.")]
     public LayerMask Swingable;
 
-    [Header("Aim assist")]
-    public float minAimAssistRadius = 0.8f;
-    public float maxAimAssistRadius = 5.0f;
+    [Header("Stats")]
+    public PlayerGrappleStatsSO stats;
 
     private Camera cam;
 
@@ -55,7 +53,7 @@ public class GrappleTargeting : MonoBehaviour
         bool foundDirectSwing = false;
 
         // Check perfectly down the center first
-        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit tempDirect, GrappleMaxDistance, queryMask))
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit tempDirect, stats.GrappleMaxDistance, queryMask))
         {
             GameObject hitObj = tempDirect.collider.gameObject;
             bool isSwingable = ((1 << hitObj.layer) & Swingable) != 0;
@@ -76,9 +74,9 @@ public class GrappleTargeting : MonoBehaviour
         // --- 2. AIM ASSIST (SPHERECAST) ---
         RaycastHit[] hits = Physics.SphereCastAll(
             cam.transform.position,
-            maxAimAssistRadius,
+            stats.maxAimAssistRadius,
             cam.transform.forward,
-            GrappleMaxDistance,
+            stats.GrappleMaxDistance,
             queryMask
         );
 
@@ -102,7 +100,7 @@ public class GrappleTargeting : MonoBehaviour
             if (distanceAlongRay < 0) continue;
 
             // Dynamic cone calculation
-            float currentAllowedRadius = Mathf.Lerp(minAimAssistRadius, maxAimAssistRadius, distanceAlongRay / GrappleMaxDistance);
+            float currentAllowedRadius = Mathf.Lerp(stats.minAimAssistRadius, stats.maxAimAssistRadius, distanceAlongRay / stats.GrappleMaxDistance);
             Vector3 pointOnCenterLine = cam.transform.position + (cam.transform.forward * distanceAlongRay);
             float distanceFromCenter = Vector3.Distance(pointOnCenterLine, hit.point);
 

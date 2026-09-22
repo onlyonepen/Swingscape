@@ -48,7 +48,7 @@ public class SlideState : PlayerState
         SlideDir = new Vector3(manager.GroundNormal().x, 0, manager.GroundNormal().z);
 
         float slopeAngle = Vector3.Angle(manager.GroundNormal(), Vector3.up);
-        float speed = Physics.gravity.magnitude * slopeAngle * manager.SlideSpeedMult;
+        float speed = Physics.gravity.magnitude * slopeAngle * manager.locomotionStats.SlideSpeedMult;
 
         SlideDir = Quaternion.AngleAxis(slopeAngle, manager.transform.right) * SlideDir;
         manager.rb.AddForce(speed * SlideDir);
@@ -67,10 +67,10 @@ public class SlideState : PlayerState
         manager.rb.linearVelocity = (newHorizontalDir * horizontalMagnitude) + (Vector3.up * verticalSpeed);
 
         //Friction
-        manager.rb.AddForce(-manager.rb.linearVelocity * (1 - manager.SlideFriction));
+        manager.rb.AddForce(-manager.rb.linearVelocity * (1 - manager.locomotionStats.SlideFriction));
 
 
-        if (manager.Input.CrouchReleased || manager.rb.linearVelocity.magnitude <= manager.SlideSpeedTreshold || manager.Input.JumpPressed)
+        if (manager.Input.CrouchReleased || manager.rb.linearVelocity.magnitude <= manager.locomotionStats.SlideSpeedTreshold || manager.Input.JumpPressed)
         {
             if (manager.Input.JumpPressed) manager.PBM.Jump();
             manager.ChangeState(manager.BaseState);

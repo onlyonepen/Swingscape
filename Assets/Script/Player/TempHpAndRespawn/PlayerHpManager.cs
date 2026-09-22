@@ -9,20 +9,19 @@ using VInspector;
 public class PlayerHpManager : MonoBehaviour
 {
     [SerializeField] private GameObject HpContainer;
-    [SerializeField] private int maxHp = 3;
+    [SerializeField] private PlayerHealthStatsSO stats;
     [ReadOnly] public int CurrentHp;
     [ReadOnly] public bool IsDead;
-    
+
     [Header("Invulnerability")]
     public bool isInvulnerable = false;
     [SerializeField] private GameObject InvulnerabilityEfffect;
-    [SerializeField] private float iFrameDuration = 0.5f;
 
     private List<Transform> hpList = new List<Transform>();
     
     private void Start()
     {
-        CurrentHp = maxHp;
+        CurrentHp = stats.maxHp;
         for (int i = 0; i < HpContainer.transform.childCount; i++)
         {
             hpList.Add(HpContainer.transform.GetChild(i));
@@ -63,7 +62,7 @@ public class PlayerHpManager : MonoBehaviour
     public void Heal(int amount = 1)
     {
         CurrentHp += amount;
-        if (CurrentHp > maxHp) CurrentHp = maxHp; // Cap healing at maxHp
+        if (CurrentHp > stats.maxHp) CurrentHp = stats.maxHp; // Cap healing at maxHp
         RefreshHp();
     }
 
@@ -100,7 +99,7 @@ public class PlayerHpManager : MonoBehaviour
         TurnOnInvulnerability();
         
         // Use Realtime so the Matrix-dodge slow-mo doesn't accidentally give you infinite I-frames
-        yield return new WaitForSecondsRealtime(iFrameDuration);
+        yield return new WaitForSecondsRealtime(stats.iFrameDuration);
         
         // Ensure we don't accidentally turn off invulnerability if a separate mechanic 
         // (like grappling) is managing it, or if the player died during the I-frames

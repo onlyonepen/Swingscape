@@ -3985,6 +3985,7 @@ GameObject:
   - component: {fileID: 237723972}
   - component: {fileID: 237723971}
   - component: {fileID: 237723977}
+  - component: {fileID: 237723978}
   m_Layer: 8
   m_Name: Bar13
   m_TagString: Untagged
@@ -4101,6 +4102,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &237723978
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 237723969}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &241050935
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5721,6 +5749,7 @@ GameObject:
   - component: {fileID: 342399812}
   - component: {fileID: 342399811}
   - component: {fileID: 342399817}
+  - component: {fileID: 342399818}
   m_Layer: 8
   m_Name: Bar10
   m_TagString: Untagged
@@ -5837,6 +5866,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &342399818
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 342399809}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1 &342470216
 GameObject:
   m_ObjectHideFlags: 0
@@ -6280,6 +6336,7 @@ GameObject:
   - component: {fileID: 379987868}
   - component: {fileID: 379987867}
   - component: {fileID: 379987873}
+  - component: {fileID: 379987874}
   m_Layer: 8
   m_Name: Bar1
   m_TagString: Untagged
@@ -6396,6 +6453,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &379987874
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379987865}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &382169509
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7182,6 +7266,7 @@ GameObject:
   - component: {fileID: 447430482}
   - component: {fileID: 447430481}
   - component: {fileID: 447430487}
+  - component: {fileID: 447430488}
   m_Layer: 8
   m_Name: Bar6
   m_TagString: Untagged
@@ -7298,6 +7383,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &447430488
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 447430479}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &447505662
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7806,6 +7918,7 @@ GameObject:
   - component: {fileID: 501394182}
   - component: {fileID: 501394181}
   - component: {fileID: 501394187}
+  - component: {fileID: 501394188}
   m_Layer: 8
   m_Name: Bar12
   m_TagString: Untagged
@@ -7922,6 +8035,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &501394188
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 501394179}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &509247809
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8358,6 +8498,7 @@ GameObject:
   - component: {fileID: 560730874}
   - component: {fileID: 560730873}
   - component: {fileID: 560730879}
+  - component: {fileID: 560730880}
   m_Layer: 8
   m_Name: Bar7
   m_TagString: Untagged
@@ -8474,6 +8615,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &560730880
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 560730871}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &568015149
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13511,6 +13679,7 @@ GameObject:
   - component: {fileID: 958005025}
   - component: {fileID: 958005024}
   - component: {fileID: 958005030}
+  - component: {fileID: 958005031}
   m_Layer: 8
   m_Name: Bar3
   m_TagString: Untagged
@@ -13627,6 +13796,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &958005031
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 958005022}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &958330188
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15229,6 +15425,7 @@ GameObject:
   - component: {fileID: 1072247794}
   - component: {fileID: 1072247793}
   - component: {fileID: 1072247799}
+  - component: {fileID: 1072247800}
   m_Layer: 8
   m_Name: Bar15
   m_TagString: Untagged
@@ -15345,6 +15542,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &1072247800
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072247791}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1 &1072524216
 GameObject:
   m_ObjectHideFlags: 0
@@ -16516,6 +16740,7 @@ GameObject:
   - component: {fileID: 1151973195}
   - component: {fileID: 1151973194}
   - component: {fileID: 1151973200}
+  - component: {fileID: 1151973201}
   m_Layer: 8
   m_Name: Bar2
   m_TagString: Untagged
@@ -16632,6 +16857,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &1151973201
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1151973192}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &1156906483
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19016,6 +19268,7 @@ GameObject:
   - component: {fileID: 1308879728}
   - component: {fileID: 1308879727}
   - component: {fileID: 1308879733}
+  - component: {fileID: 1308879734}
   m_Layer: 8
   m_Name: Bar5
   m_TagString: Untagged
@@ -19132,6 +19385,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &1308879734
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308879725}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &1310888225
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23825,6 +24105,7 @@ GameObject:
   - component: {fileID: 1670774221}
   - component: {fileID: 1670774220}
   - component: {fileID: 1670774226}
+  - component: {fileID: 1670774227}
   m_Layer: 8
   m_Name: Bar9
   m_TagString: Untagged
@@ -23941,6 +24222,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &1670774227
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1670774218}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1 &1675057756
 GameObject:
   m_ObjectHideFlags: 0
@@ -26374,6 +26682,7 @@ GameObject:
   - component: {fileID: 1778384973}
   - component: {fileID: 1778384972}
   - component: {fileID: 1778384978}
+  - component: {fileID: 1778384979}
   m_Layer: 8
   m_Name: Bar11
   m_TagString: Untagged
@@ -26490,6 +26799,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &1778384979
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1778384970}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &1778441879
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27237,6 +27573,7 @@ GameObject:
   - component: {fileID: 1838081535}
   - component: {fileID: 1838081534}
   - component: {fileID: 1838081540}
+  - component: {fileID: 1838081541}
   m_Layer: 8
   m_Name: Bar8
   m_TagString: Untagged
@@ -27353,6 +27690,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &1838081541
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1838081532}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!4 &1855254000 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5223269087290271838, guid: ba1ee7806c0982b4cb94494b521eb7cb, type: 3}
@@ -29463,6 +29827,7 @@ GameObject:
   - component: {fileID: 2029758199}
   - component: {fileID: 2029758198}
   - component: {fileID: 2029758204}
+  - component: {fileID: 2029758205}
   m_Layer: 8
   m_Name: Bar4
   m_TagString: Untagged
@@ -29579,6 +29944,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &2029758205
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029758196}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1 &2034202592
 GameObject:
   m_ObjectHideFlags: 0
@@ -30090,6 +30482,7 @@ GameObject:
   - component: {fileID: 2071735015}
   - component: {fileID: 2071735014}
   - component: {fileID: 2071735020}
+  - component: {fileID: 2071735021}
   m_Layer: 8
   m_Name: Bar16
   m_TagString: Untagged
@@ -30206,6 +30599,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &2071735021
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071735012}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &2078295579
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31061,6 +31481,7 @@ GameObject:
   - component: {fileID: 2130186706}
   - component: {fileID: 2130186705}
   - component: {fileID: 2130186711}
+  - component: {fileID: 2130186712}
   m_Layer: 8
   m_Name: Bar14
   m_TagString: Untagged
@@ -31177,6 +31598,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Attackable
   attackType: {fileID: 11400000, guid: 026019a745294d30b462eded6602385a, type: 2}
   hitEffects: []
+--- !u!54 &2130186712
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2130186703}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
 --- !u!1001 &2133909090
 PrefabInstance:
   m_ObjectHideFlags: 0

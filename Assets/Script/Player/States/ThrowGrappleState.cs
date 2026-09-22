@@ -37,7 +37,7 @@ public class ThrowGrappleState : PlayerState
         }
         else
         {
-            manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.Targeting.GrappleMaxDistance;
+            manager.RUD.GrapplePoint = manager.Guntip.position + manager.Cam.transform.forward * manager.Targeting.stats.GrappleMaxDistance;
         }
     }
 
@@ -48,11 +48,11 @@ public class ThrowGrappleState : PlayerState
         manager.GuntipPointToGrapple();
 
         float elapsed = Time.time - stateEnterTime;
-        float percent = Mathf.Clamp01(elapsed / manager.GrappleTravelTime);
+        float percent = Mathf.Clamp01(elapsed / manager.grappleStats.GrappleTravelTime);
 
         DrawAnimatedRope(percent);
         
-        if (Time.time - stateEnterTime > manager.GrappleTravelTime)
+        if (Time.time - stateEnterTime > manager.grappleStats.GrappleTravelTime)
         { 
             if ( grappleCastHit.collider == null)
             {

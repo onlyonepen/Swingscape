@@ -25,49 +25,19 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerRUD RUD = new PlayerRUD();
     public LayerMask TerrainLayer;
     public Transform feetTrans;
-    [Header("CameraFov")]
-    public float minFov = 80f;
-    public float maxFov = 100f;
-    public float fovSmoothSpeed = 10f;
-    public float fovChangeTreshold = 10f;
-    public float MaxSpeedForFovChange = 60f;
+    [Header("Stats")]
+    public PlayerCameraStatsSO cameraStats;
+    public PlayerLocomotionStatsSO locomotionStats;
+    public PlayerGrappleStatsSO grappleStats;
     private float currentFov;
-    [Header("Wall run")]
-    public float WallRunAccel = 50f;
-    public float WallRunMaxSpeed = 12f; 
-    public float WallClimbSpeed = 3f;
-    public float WallJumpForce = 10;
-    public float WallCheckDistance = 1f;
-    public float GroundCheckDistance = 2f;
     public Transform SideRotateJoint;
-    [Header("Sliding")]
-    public float SlideSpeedMult = 0.2f;
-    public float SlideSpeedTreshold = 2f;
-    public float SlideFriction = 0.8f;
-    [Header("Mantle")]
-    public float PlayerHeightOffset = 1.6f;
-    public float MantleFrontCastDist = 1.2f;
     [Header("Grapple")]
     public Transform grappleGun;
     public Transform Guntip;
     public Transform GrappleArm;
-    public float GrappleEnemyOffset = 1.5f;
     internal Vector3 initialHandPos;
     internal Quaternion initialHandRot;
-    public float GrappleTravelTime;
     public LineRenderer GrappleLr;
-    [Header("Swinging")]
-    public float JointSpring = 4.5f;
-    public float JointDamper = 7f; 
-    public float JointMassScale = 4.5f;
-    public float AirControlFwdForce = 600;
-    public float AirControlHorizontalForce = 400;
-    public float SwingDashPower = 20;
-    public float SwingDashMaxPower = 18;
-    public float SwingDashMinPower = 5;
-    [Header("Pull into")]
-    public float PullIntoSpeed = 40f;
-    public float OvershootYAxis = 3f;
 
     // Open by default: only the CheckpointManager (start-of-run progression gate) locks this.
     [HideInInspector] public bool canGrapple = true;
@@ -111,7 +81,7 @@ public class PlayerStateManager : MonoBehaviour
 
     private void Start()
     {
-        currentFov = minFov;
+        currentFov = cameraStats.minFov;
         initialHandPos = GrappleArm.localPosition;
         initialHandRot = GrappleArm.localRotation;
 
@@ -186,7 +156,7 @@ public class PlayerStateManager : MonoBehaviour
 
     private void EnergyRegen()
     {
-        float rate = PBM.isGrounded ? Energy.GroundedEnergyRegeneration : CurrentState.EnergyRegenRate;
+        float rate = PBM.isGrounded ? Energy.stats.GroundedEnergyRegeneration : CurrentState.EnergyRegenRate;
         Energy.Regen(rate);
     }
 
@@ -194,10 +164,10 @@ public class PlayerStateManager : MonoBehaviour
     public void UpdateFov()
     {
         float currentSpeed = rb.linearVelocity.magnitude;
-        float speedFactor = Mathf.InverseLerp(fovChangeTreshold, MaxSpeedForFovChange, currentSpeed);
+        float speedFactor = Mathf.InverseLerp(cameraStats.fovChangeTreshold, cameraStats.MaxSpeedForFovChange, currentSpeed);
         float logFactor = Mathf.Log10(1f + (speedFactor * 9f));
-        float targetFov = Mathf.Lerp(minFov, maxFov, logFactor);
-        currentFov = Mathf.Lerp(currentFov, targetFov, Time.deltaTime * fovSmoothSpeed);
+        float targetFov = Mathf.Lerp(cameraStats.minFov, cameraStats.maxFov, logFactor);
+        currentFov = Mathf.Lerp(currentFov, targetFov, Time.deltaTime * cameraStats.fovSmoothSpeed);
         camController.changeFov(currentFov);
     }
 }
@@ -221,7 +191,7 @@ public abstract class PlayerState
     public virtual void OnStateTriggerEnter(Collider collider) { }
 
     /// <summary>Energy regen rate while airborne in this state. Grounded always overrides to GroundedEnergyRegeneration.</summary>
-    public virtual float EnergyRegenRate => manager.Energy.EnergyRegeneration;
+    public virtual float EnergyRegenRate => manager.Energy.stats.EnergyRegeneration;
 }
 
 public class PlayerRUD

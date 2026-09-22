@@ -8,17 +8,7 @@ using UnityEngine;
 /// </summary>
 public class PlayerEnergy : MonoBehaviour
 {
-    public bool useEnergy = true;
-    public float MaxEnergy = 100f;
-
-    [Header("Usage costs")]
-    public float InitialThrowUsage = 20;
-    public float GrappleLeapUsage = 40;
-    public float GrappleDashUsage = 10;
-
-    [Header("Regeneration")]
-    public float EnergyRegeneration = 5f;
-    public float GroundedEnergyRegeneration = 50f;
+    public PlayerEnergyStatsSO stats;
 
     public float currentEnergy;
 
@@ -27,7 +17,7 @@ public class PlayerEnergy : MonoBehaviour
 
     private void Start()
     {
-        currentEnergy = MaxEnergy;
+        currentEnergy = stats.MaxEnergy;
     }
 
     /// <summary>Tries to spend energy. Returns true if the action is allowed.</summary>
@@ -37,7 +27,7 @@ public class PlayerEnergy : MonoBehaviour
         // implementation). Remove this early return when you want costs to apply.
         return true;
 
-        if (!useEnergy) return true;
+        if (!stats.useEnergy) return true;
 
         if (currentEnergy - usage >= 0)
         {
@@ -50,12 +40,12 @@ public class PlayerEnergy : MonoBehaviour
     /// <summary>Refill to full (e.g. on enemy kill).</summary>
     public void Refill()
     {
-        currentEnergy = MaxEnergy;
+        currentEnergy = stats.MaxEnergy;
     }
 
     /// <summary>Accumulate energy at the given per-second rate, clamped to MaxEnergy.</summary>
     public void Regen(float ratePerSecond)
     {
-        currentEnergy = Mathf.Min(currentEnergy + ratePerSecond * Time.deltaTime, MaxEnergy);
+        currentEnergy = Mathf.Min(currentEnergy + ratePerSecond * Time.deltaTime, stats.MaxEnergy);
     }
 }

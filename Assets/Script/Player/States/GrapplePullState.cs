@@ -69,7 +69,7 @@ public class GrapplePullState : PlayerState
         manager.RUD.GrapplePoint = grappledObj.transform.position;
         manager.GuntipPointToGrapple();
 
-        float currentOffset = manager.GrappleEnemyOffset;
+        float currentOffset = manager.grappleStats.GrappleEnemyOffset;
 
         // Check if object is an enemy and dynamically calculate offset from collider size
         if (Grappleable.Resolve(grappledObj) != GrappleType.Normal)

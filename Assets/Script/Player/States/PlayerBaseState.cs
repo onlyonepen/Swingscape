@@ -38,7 +38,7 @@ public class PlayerBaseState : PlayerState
         if(!manager.PBM.isGrounded) manager.footstepManager.SetFootstepsEnabled(false);
         else  manager.footstepManager.SetFootstepsEnabled(true);
         
-        if (manager.Input.GrapplePressed && manager.Energy.UseEnergy(manager.Energy.InitialThrowUsage))
+        if (manager.Input.GrapplePressed && manager.Energy.UseEnergy(manager.Energy.stats.InitialThrowUsage))
         {
             manager.grappleGun.gameObject.SetActive(true);
             manager.ChangeState(manager.ThrowGrappleState);
@@ -47,10 +47,10 @@ public class PlayerBaseState : PlayerState
 
     private void WallRunCheck()
     {
-        bool wallRightUpper = Physics.Raycast(manager.transform.position, manager.Cam.transform.right, manager.WallCheckDistance, manager.TerrainLayer);
-        bool wallRightLower = Physics.Raycast(manager.transform.position - Vector3.up * manager.PlayerHeightOffset, manager.Cam.transform.right, manager.WallCheckDistance, manager.TerrainLayer);
-        bool wallLeftUpper = Physics.Raycast(manager.transform.position, -manager.Cam.transform.right, manager.WallCheckDistance, manager.TerrainLayer);
-        bool wallLeftLower = Physics.Raycast(manager.transform.position - Vector3.up * manager.PlayerHeightOffset , -manager.Cam.transform.right, manager.WallCheckDistance, manager.TerrainLayer);
+        bool wallRightUpper = Physics.Raycast(manager.transform.position, manager.Cam.transform.right, manager.locomotionStats.WallCheckDistance, manager.TerrainLayer);
+        bool wallRightLower = Physics.Raycast(manager.transform.position - Vector3.up * manager.locomotionStats.PlayerHeightOffset, manager.Cam.transform.right, manager.locomotionStats.WallCheckDistance, manager.TerrainLayer);
+        bool wallLeftUpper = Physics.Raycast(manager.transform.position, -manager.Cam.transform.right, manager.locomotionStats.WallCheckDistance, manager.TerrainLayer);
+        bool wallLeftLower = Physics.Raycast(manager.transform.position - Vector3.up * manager.locomotionStats.PlayerHeightOffset , -manager.Cam.transform.right, manager.locomotionStats.WallCheckDistance, manager.TerrainLayer);
 
         bool wallRight = wallRightLower && wallRightUpper;
         bool wallLeft = wallLeftLower && wallLeftUpper;
@@ -72,16 +72,16 @@ public class PlayerBaseState : PlayerState
 
         if (Physics.Raycast(origin + (Vector3.up * 0.5f), forward, out RaycastHit wallHit, forwardReach, manager.TerrainLayer))
         {
-            bool headBlocked = Physics.Raycast(origin + (Vector3.up * manager.PlayerHeightOffset), Vector3.up, manager.PlayerHeightOffset, manager.TerrainLayer);
+            bool headBlocked = Physics.Raycast(origin + (Vector3.up * manager.locomotionStats.PlayerHeightOffset), Vector3.up, manager.locomotionStats.PlayerHeightOffset, manager.TerrainLayer);
             if (headBlocked) return;
 
-            Vector3 ledgeCheckOrigin = wallHit.point + (forward * 0.2f) + (Vector3.up * manager.PlayerHeightOffset);
+            Vector3 ledgeCheckOrigin = wallHit.point + (forward * 0.2f) + (Vector3.up * manager.locomotionStats.PlayerHeightOffset);
 
-            if (Physics.Raycast(ledgeCheckOrigin, Vector3.down, out RaycastHit ledgeHit, manager.PlayerHeightOffset, manager.TerrainLayer))
+            if (Physics.Raycast(ledgeCheckOrigin, Vector3.down, out RaycastHit ledgeHit, manager.locomotionStats.PlayerHeightOffset, manager.TerrainLayer))
             {
                 Vector3 targetPos = ledgeHit.point;
 
-                bool spaceOccupied = Physics.CheckCapsule(targetPos + Vector3.up * 0.5f, targetPos + Vector3.up * (manager.PlayerHeightOffset - 0.5f), 0.4f, manager.TerrainLayer);
+                bool spaceOccupied = Physics.CheckCapsule(targetPos + Vector3.up * 0.5f, targetPos + Vector3.up * (manager.locomotionStats.PlayerHeightOffset - 0.5f), 0.4f, manager.TerrainLayer);
 
                 if (!spaceOccupied)
                 {
@@ -114,8 +114,8 @@ public class PlayerBaseState : PlayerState
         // (This fixes a small bug where your old vertInput was overriding before horiInput calculated)
         Vector2 inputDir = manager.Input.Move.normalized;
     
-        float vertical = inputDir.y * manager.AirControlFwdForce;
-        float horizontal = inputDir.x * manager.AirControlHorizontalForce;
+        float vertical = inputDir.y * manager.grappleStats.AirControlFwdForce;
+        float horizontal = inputDir.x * manager.grappleStats.AirControlHorizontalForce;
     
         // 2. Calculate the base force direction using the camera's orientation
         Vector3 TotalForceDir = (manager.Cam.transform.forward * vertical) + (manager.Cam.transform.right * horizontal);

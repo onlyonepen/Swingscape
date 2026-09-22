@@ -32,8 +32,16 @@ public class SliceAttackTypeSO : AttackTypeSO
             // The cut plane can miss the mesh entirely (e.g. a glancing hit), leaving both
             // objects null. ownerSliceable already committed to dying in OnSliceStart, so still
             // notify it here (with whatever we got) instead of leaving it stuck mid-death forever.
-            if (result.posObject != null) result.posObject.transform.parent = null;
-            if (result.negObject != null) result.negObject.transform.parent = null;
+            if (result.posObject != null)
+            {
+                result.posObject.transform.parent = null;
+                result.posObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+            }
+            if (result.negObject != null)
+            {
+                result.negObject.transform.parent = null;
+                result.negObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+            }
 
             sliceable?.OnSliceComplete(result);
         });

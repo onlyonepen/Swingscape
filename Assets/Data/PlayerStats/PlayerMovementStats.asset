@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2602a3e19ae918b4e97aeceaa665ecf4, type: 3}
+  m_Name: PlayerMovementStats
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementStatsSO
+  walkSpeed: 12
+  acceleration: 70
+  deceleration: 130
+  AirMaxSpeed: 65
+  hasVariableJumpHeight: 1
+  jumpPower: 10
+  coyoteTime: 0.15
+  jumpBuffferingTime: 0.2
+  RealisticGravity: 18
+  hasFallingExtraGrav: 1
+  extraGravityAmount: 7
+  hasApexModifier: 0
+  apexVertVelocityDetection: 0.7
+  apexSpeedMult: 1.2
+  apexFloatPower: 1
+  hasMaxFallSpeed: 0
+  terminalVelocity: -15
+  enableCrouch: 1
+  holdToCrouch: 0
+  crouchHeight: 0.75
+  speedReduction: 0.5
+  rideHeight: 1
+  rideSpringStrength: 200
+  rideSpringDamper: 20
+  enableHeadBob: 1
+  bobSpeed: 15
+  bobAmount: {x: 0, y: 0.1, z: 0}

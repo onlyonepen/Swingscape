@@ -11,15 +11,17 @@ public class PlayerBaseMovement : MonoBehaviour
     [SerializeField] private LayerMask GroundLayer;
     #endregion
 
+    #region Stats
+    [Header("Stats")]
+    public PlayerMovementStatsSO stats;
+    public PlayerCameraStatsSO cameraStats;
+    #endregion
+
     #region Camera Movement Variables
     [Header("Camera control")]
 
     public Camera playerCamera;
-    public float fov = 60f;
-    public bool invertCamera = false;
     public bool cameraCanMove = true;
-    public float mouseSensitivity = 2f;
-    public float maxLookAngle = 50f;
     public bool lockCursor = true;
 
     // Internal Variables
@@ -32,10 +34,9 @@ public class PlayerBaseMovement : MonoBehaviour
     [Header("Movement")]
 
     public bool playerCanMove = true;
-    public float walkSpeed = 8f;
-    [SerializeField] private float acceleration = 50f; 
-    [SerializeField] private float deceleration = 40f;
-    [SerializeField] private float AirMaxSpeed = 20f;  
+    // Seeded from stats.walkSpeed in Awake — Crouch() mutates this at runtime, so it can't
+    // read straight from the (shared) SO or crouching would permanently alter the asset.
+    [HideInInspector] public float walkSpeed;
 
     // Internal Variables
     private bool isWalking = false;
@@ -44,10 +45,6 @@ public class PlayerBaseMovement : MonoBehaviour
     [Header("Jump")]
 
     public bool enableJump = true;
-    public bool hasVariableJumpHeight = true;
-    public float jumpPower = 5f;
-    public float coyoteTime = 0.2f;
-    public float jumpBuffferingTime = 0.2f;
 
     // Internal Variables
     private float jumpMuteTimer = 0f;
@@ -60,39 +57,13 @@ public class PlayerBaseMovement : MonoBehaviour
     #endregion
 
     #region Extra gravity
-    [Header("Gravity")]
-
-    public float RealisticGravity = 30f;
-    public bool hasFallingExtraGrav = true;
-    public float extraGravityAmount = 3;
-
-    #endregion
-
-    #region Apex modifier
-    [Header("Apex modifier")]
-
-    public bool hasApexModifier = true;
-    public float apexVertVelocityDetection = 0.7f;
-    public float apexSpeedMult = 1.2f;
-    public float apexFloatPower = 1f;
-
-    #endregion
-
-    #region MaxFallSpeed
-    [Header("Max fall speed")]
-
-    public bool hasMaxFallSpeed = true;
-    public float terminalVelocity = -10f;
+    // Seeded from stats.hasFallingExtraGrav in Awake — grapple states toggle this at runtime
+    // (GrappleLeapState/GrapplePullintoState), so it can't read straight from the shared SO.
+    [HideInInspector] public bool hasFallingExtraGrav;
 
     #endregion
 
     #region Crouch
-    [Header("Crouch/Slide")]
-    public bool enableCrouch = true;
-    public bool holdToCrouch = true;
-    public float crouchHeight = .75f;
-    public float speedReduction = .5f;
-
     // Internal Variables
     private bool isCrouched = false;
     private Vector3 originalScale;
@@ -106,18 +77,11 @@ public class PlayerBaseMovement : MonoBehaviour
 
     [HideInInspector] public bool FloatingCapsuleActive = true;
 
-    public float rideHeight = 1.5f; // Desired height above ground
-    [SerializeField] private float rideSpringStrength = 50f; // How "stiff" the hover is
-    [SerializeField] private float rideSpringDamper = 5f;
-
     #endregion
 
     #region Head Bob
     [Header("HeadBob")]
-    public bool enableHeadBob = true;
     public Transform joint;
-    public float bobSpeed = 10f;
-    public Vector3 bobAmount = new Vector3(.15f, .05f, 0f);
 
     // Internal Variables
     private Vector3 jointOriginalPos;
@@ -130,7 +94,10 @@ public class PlayerBaseMovement : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         playerInput = GetComponentInParent<PlayerManager>().Input;
 
-        playerCamera.fieldOfView = fov;
+        walkSpeed = stats.walkSpeed;
+        hasFallingExtraGrav = stats.hasFallingExtraGrav;
+
+        playerCamera.fieldOfView = cameraStats.fov;
         originalScale = transform.localScale;
         jointOriginalPos = joint.localPosition;
     }
@@ -142,7 +109,7 @@ public class PlayerBaseMovement : MonoBehaviour
             Cursor.lockState = CursorLockMode.Locked;
         }
 
-        Physics.gravity = Vector3.down * RealisticGravity;
+        Physics.gravity = Vector3.down * stats.RealisticGravity;
     }
 
     private void Update()
@@ -158,20 +125,20 @@ public class PlayerBaseMovement : MonoBehaviour
         // Control camera movement
         if (cameraCanMove)
         {
-            yaw = transform.localEulerAngles.y + playerInput.Look.x * mouseSensitivity;
+            yaw = transform.localEulerAngles.y + playerInput.Look.x * cameraStats.mouseSensitivity;
 
-            if (!invertCamera)
+            if (!cameraStats.invertCamera)
             {
-                pitch -= mouseSensitivity * playerInput.Look.y;
+                pitch -= cameraStats.mouseSensitivity * playerInput.Look.y;
             }
             else
             {
                 // Inverted Y
-                pitch += mouseSensitivity * playerInput.Look.y;
+                pitch += cameraStats.mouseSensitivity * playerInput.Look.y;
             }
 
             // Clamp pitch between lookAngle
-            pitch = Mathf.Clamp(pitch, -maxLookAngle, maxLookAngle);
+            pitch = Mathf.Clamp(pitch, -cameraStats.maxLookAngle, cameraStats.maxLookAngle);
 
             transform.localEulerAngles = new Vector3(0, yaw, 0);
             playerCamera.transform.localEulerAngles = new Vector3(pitch, 0, 0);
@@ -185,13 +152,13 @@ public class PlayerBaseMovement : MonoBehaviour
 
             if (isGrounded)
             {
-                coyoteTimer = coyoteTime;
+                coyoteTimer = stats.coyoteTime;
                 isExtraGravOn = false;
             }
 
             if (playerInput.JumpPressed)
             {
-                bufferingTimer = jumpBuffferingTime;
+                bufferingTimer = stats.jumpBuffferingTime;
             }
 
             if (enableJump && bufferingTimer > 0f && coyoteTimer > 0f)
@@ -205,19 +172,19 @@ public class PlayerBaseMovement : MonoBehaviour
 
             #region Crouch
 
-            if (enableCrouch)
+            if (stats.enableCrouch)
             {
-                if (playerInput.CrouchPressed && !holdToCrouch)
+                if (playerInput.CrouchPressed && !stats.holdToCrouch && isGrounded)
                 {
                     Crouch();
                 }
 
-                if (playerInput.CrouchPressed && holdToCrouch)
+                if (playerInput.CrouchPressed && stats.holdToCrouch && isGrounded)
                 {
                     isCrouched = false;
                     Crouch();
                 }
-                else if (playerInput.CrouchReleased && holdToCrouch)
+                else if (playerInput.CrouchReleased && stats.holdToCrouch)
                 {
                     isCrouched = true;
                     Crouch();
@@ -239,7 +206,7 @@ public class PlayerBaseMovement : MonoBehaviour
         #endregion
 
 
-        if (enableHeadBob)
+        if (stats.enableHeadBob)
         {
             Vector3 horizontalVel = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
             isWalking = isGrounded && horizontalVel.magnitude > 0.1f;
@@ -265,7 +232,7 @@ public class PlayerBaseMovement : MonoBehaviour
                 Vector3 currentVelocity = rb.linearVelocity;
                 currentVelocity.y = 0;
 
-                float driveForce = moveInput.magnitude > 0 ? acceleration : deceleration;
+                float driveForce = moveInput.magnitude > 0 ? stats.acceleration : stats.deceleration;
 
                 Vector3 newVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, driveForce * Time.fixedDeltaTime);
 
@@ -275,9 +242,9 @@ public class PlayerBaseMovement : MonoBehaviour
             }
             else
             {
-                if(rb.linearVelocity.magnitude > AirMaxSpeed)
+                if(rb.linearVelocity.magnitude > stats.AirMaxSpeed)
                 {
-                    rb.linearVelocity = rb.linearVelocity.normalized * AirMaxSpeed;
+                    rb.linearVelocity = rb.linearVelocity.normalized * stats.AirMaxSpeed;
                 }
             }
         }
@@ -286,9 +253,9 @@ public class PlayerBaseMovement : MonoBehaviour
 
         #region Apex modifier
 
-        if (hasApexModifier && rb.linearVelocity.y < apexVertVelocityDetection)
+        if (stats.hasApexModifier && rb.linearVelocity.y < stats.apexVertVelocityDetection)
         {
-            rb.AddForce(Vector3.up * apexFloatPower, ForceMode.Force);
+            rb.AddForce(Vector3.up * stats.apexFloatPower, ForceMode.Force);
             //AddSpeed
         }
 
@@ -296,20 +263,20 @@ public class PlayerBaseMovement : MonoBehaviour
 
         #region ExtraGrav
 
-        bool variableJumpHeightActive = hasVariableJumpHeight && !playerInput.JumpHeld;
+        bool variableJumpHeightActive = stats.hasVariableJumpHeight && !playerInput.JumpHeld;
         isExtraGravOn = hasFallingExtraGrav && (rb.linearVelocity.y < 0 || variableJumpHeightActive);
         if (isExtraGravOn)
         {
-            rb.AddForce(Vector3.down * extraGravityAmount, ForceMode.Acceleration);
+            rb.AddForce(Vector3.down * stats.extraGravityAmount, ForceMode.Acceleration);
         }
 
         #endregion
 
         #region Terminal velocity
 
-        if(hasMaxFallSpeed && rb.linearVelocity.y < terminalVelocity)
+        if(stats.hasMaxFallSpeed && rb.linearVelocity.y < stats.terminalVelocity)
         {
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, terminalVelocity, rb.linearVelocity.z);
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, stats.terminalVelocity, rb.linearVelocity.z);
         }
 
         #endregion
@@ -322,7 +289,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
     private void CheckGround()
     {
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, rideHeight + 0.1f, GroundLayer);
+        isGrounded = Physics.Raycast(transform.position, Vector3.down, stats.rideHeight + 0.1f, GroundLayer);
     }
 
     private void floatingCapsule()
@@ -330,16 +297,16 @@ public class PlayerBaseMovement : MonoBehaviour
         if (jumpMuteTimer > 0) return;
 
         Ray ray = new Ray(transform.position, Vector3.down);
-        if (Physics.Raycast(ray, out RaycastHit hit, rideHeight + 0.1f, GroundLayer))
+        if (Physics.Raycast(ray, out RaycastHit hit, stats.rideHeight + 0.1f, GroundLayer))
         {
             float distance = hit.distance;
 
             float rayDirVelocity = Vector3.Dot(Vector3.down, rb.linearVelocity);
             float relVel = rayDirVelocity;
-            float xLen = distance - rideHeight;
-            float springForce = (xLen * rideSpringStrength) - (relVel * rideSpringDamper);
+            float xLen = distance - stats.rideHeight;
+            float springForce = (xLen * stats.rideSpringStrength) - (relVel * stats.rideSpringDamper);
 
-            Debug.DrawLine(transform.position, transform.position + (Vector3.down * (rideHeight + 0.1f)), Color.red);
+            Debug.DrawLine(transform.position, transform.position + (Vector3.down * (stats.rideHeight + 0.1f)), Color.red);
             rb.AddForce(Vector3.down * springForce);
         }
     }
@@ -347,12 +314,12 @@ public class PlayerBaseMovement : MonoBehaviour
     public void Jump()
     {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
-        rb.AddForce(0f, jumpPower, 0f, ForceMode.Impulse);
+        rb.AddForce(0f, stats.jumpPower, 0f, ForceMode.Impulse);
         isGrounded = false;
 
         jumpMuteTimer = jumpMuteDuration;
 
-        if (isCrouched && !holdToCrouch)
+        if (isCrouched && !stats.holdToCrouch)
         {
             Crouch();
         }
@@ -361,29 +328,29 @@ public class PlayerBaseMovement : MonoBehaviour
     private void Crouch()
     {
         // Calculate how much the scale is changing
-        // Note: If you are using a standard Unity Capsule (which is 2 units tall), 
-        // the bottom moves exactly by the difference in scale. 
+        // Note: If you are using a standard Unity Capsule (which is 2 units tall),
+        // the bottom moves exactly by the difference in scale.
         // If your character model is 1 unit tall, you would divide this by 2f.
-        float heightDifference = originalScale.y - crouchHeight; 
+        float heightDifference = originalScale.y - stats.crouchHeight;
 
         if (isCrouched)
         {
             transform.localScale = new Vector3(originalScale.x, originalScale.y, originalScale.z);
-        
+
             // Push the player up so the expanding collider doesn't clip into the floor
             transform.position += new Vector3(0, heightDifference, 0);
-        
-            walkSpeed /= speedReduction;
+
+            walkSpeed /= stats.speedReduction;
             isCrouched = false;
         }
         else
         {
-            transform.localScale = new Vector3(originalScale.x, crouchHeight, originalScale.z);
-        
+            transform.localScale = new Vector3(originalScale.x, stats.crouchHeight, originalScale.z);
+
             // Push the player down so they don't float momentarily after shrinking
             transform.position -= new Vector3(0, heightDifference, 0);
-        
-            walkSpeed *= speedReduction;
+
+            walkSpeed *= stats.speedReduction;
             isCrouched = true;
         }
     }
@@ -395,19 +362,19 @@ public class PlayerBaseMovement : MonoBehaviour
             // Calculates HeadBob speed during crouched movement
             if (isCrouched)
             {
-                timer += Time.deltaTime * (bobSpeed * speedReduction);
+                timer += Time.deltaTime * (stats.bobSpeed * stats.speedReduction);
             }
             else
             {
-                timer += Time.deltaTime * bobSpeed;
+                timer += Time.deltaTime * stats.bobSpeed;
             }
-            joint.localPosition = new Vector3(jointOriginalPos.x + Mathf.Sin(timer) * bobAmount.x, jointOriginalPos.y + Mathf.Sin(timer) * bobAmount.y, jointOriginalPos.z + Mathf.Sin(timer) * bobAmount.z);
+            joint.localPosition = new Vector3(jointOriginalPos.x + Mathf.Sin(timer) * stats.bobAmount.x, jointOriginalPos.y + Mathf.Sin(timer) * stats.bobAmount.y, jointOriginalPos.z + Mathf.Sin(timer) * stats.bobAmount.z);
         }
         else
         {
             // Resets when play stops moving
             timer = 0;
-            joint.localPosition = new Vector3(Mathf.Lerp(joint.localPosition.x, jointOriginalPos.x, Time.deltaTime * bobSpeed), Mathf.Lerp(joint.localPosition.y, jointOriginalPos.y, Time.deltaTime * bobSpeed), Mathf.Lerp(joint.localPosition.z, jointOriginalPos.z, Time.deltaTime * bobSpeed));
+            joint.localPosition = new Vector3(Mathf.Lerp(joint.localPosition.x, jointOriginalPos.x, Time.deltaTime * stats.bobSpeed), Mathf.Lerp(joint.localPosition.y, jointOriginalPos.y, Time.deltaTime * stats.bobSpeed), Mathf.Lerp(joint.localPosition.z, jointOriginalPos.z, Time.deltaTime * stats.bobSpeed));
         }
     }
 }

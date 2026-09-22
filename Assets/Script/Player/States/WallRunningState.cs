@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class WallRunningState : PlayerState
 {
-    public override float EnergyRegenRate => manager.Energy.GroundedEnergyRegeneration;
+    public override float EnergyRegenRate => manager.Energy.stats.GroundedEnergyRegeneration;
 
     RaycastHit leftWallHit;
     RaycastHit rightWallHit;
@@ -11,8 +11,7 @@ public class WallRunningState : PlayerState
     bool wallLeft;
     bool wallRight;
 
-    bool upwardsRunning;
-    bool downwardsRunning;
+    bool jumpedOffWall;
 
     Tween rotateTween;
 
@@ -23,6 +22,8 @@ public class WallRunningState : PlayerState
         manager.GuntipDefault();
         manager.rb.useGravity = false;
         manager.Targeting.HidePredictionPoint();
+
+        jumpedOffWall = false;
     }
 
     public override void OnStateUpdate()
@@ -40,7 +41,15 @@ public class WallRunningState : PlayerState
         
         if (manager.Input.GrapplePressed) manager.ChangeState(manager.ThrowGrappleState);
 
-        if (manager.Input.JumpPressed || manager.Input.ForwardReleased) manager.ChangeState(manager.BaseState);
+        if (manager.Input.JumpPressed)
+        {
+            jumpedOffWall = true;
+            manager.ChangeState(manager.BaseState);
+        }
+        else if (manager.Input.ForwardReleased || manager.Input.CrouchPressed)
+        {
+            manager.ChangeState(manager.BaseState);
+        }
     }
 
     public override void OnStateExit()
@@ -51,14 +60,14 @@ public class WallRunningState : PlayerState
 
         rotateTween.Kill();
 
-        WallJump();
+        if (jumpedOffWall) WallJump();
     }
     
     private void WallJump()
     {
         Vector3 wallNormal = wallRight ? rightWallHit.normal : leftWallHit.normal;
 
-        Vector3 jumpDir = (wallNormal.normalized * manager.WallJumpForce) + (manager.transform.up.normalized * manager.PBM.jumpPower);
+        Vector3 jumpDir = (wallNormal.normalized * manager.locomotionStats.WallJumpForce) + (manager.transform.up.normalized * manager.PBM.stats.jumpPower);
 
         manager.rb.AddForce(jumpDir, ForceMode.Impulse);
     }
@@ -66,9 +75,6 @@ public class WallRunningState : PlayerState
     private void WallRunMovement()
     {
         orient = new Vector3(manager.Cam.transform.forward.x, 0 , manager.Cam.transform.forward.z).normalized;
-
-        upwardsRunning = manager.Input.SprintHeld;
-        downwardsRunning = manager.Input.CrouchHeld;
 
         Rigidbody rb = manager.rb;
 
@@ -83,30 +89,25 @@ public class WallRunningState : PlayerState
 
 
 
-        Vector3 targetVelocity = manager.transform.TransformDirection(orient) * manager.WallRunMaxSpeed;
-
         float currentVelocity = rb.linearVelocity.magnitude;
-        float currentMoveSpeed = currentVelocity;
 
-        if (currentVelocity <= manager.WallRunMaxSpeed)
+        if (currentVelocity > manager.locomotionStats.WallRunMaxSpeed)
         {
-            currentMoveSpeed += manager.WallRunAccel;
+            float dampedSpeed = Mathf.MoveTowards(currentVelocity, manager.locomotionStats.WallRunMaxSpeed, manager.locomotionStats.WallRunOverspeedDampRate * Time.deltaTime);
+            rb.linearVelocity = rb.linearVelocity.normalized * dampedSpeed;
         }
-        else currentMoveSpeed = manager.WallRunMaxSpeed;
-
+        else
+        {
+            float currentMoveSpeed = currentVelocity + manager.locomotionStats.WallRunAccel;
             rb.AddForce(currentMoveSpeed * wallForward.normalized * Time.deltaTime, ForceMode.VelocityChange);
-
-        if (upwardsRunning)
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, manager.WallClimbSpeed, rb.linearVelocity.z);
-        if (downwardsRunning)
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, -manager.WallClimbSpeed, rb.linearVelocity.z);
+        }
     }
 
     private void WallRunCheck()
     {
-        wallRight = Physics.Raycast(manager.transform.position, manager.Cam.transform.right, out rightWallHit, manager.WallCheckDistance, manager.TerrainLayer);
-        wallLeft = Physics.Raycast(manager.transform.position, -manager.Cam.transform.right, out leftWallHit, manager.WallCheckDistance, manager.TerrainLayer);
-        bool grounded = Physics.Raycast(manager.transform.position, Vector3.down, manager.GroundCheckDistance, LayerMask.GetMask("Ground"));
+        wallRight = Physics.Raycast(manager.transform.position, manager.Cam.transform.right, out rightWallHit, manager.locomotionStats.WallCheckDistance, manager.TerrainLayer);
+        wallLeft = Physics.Raycast(manager.transform.position, -manager.Cam.transform.right, out leftWallHit, manager.locomotionStats.WallCheckDistance, manager.TerrainLayer);
+        bool grounded = Physics.Raycast(manager.transform.position, Vector3.down, manager.locomotionStats.GroundCheckDistance, LayerMask.GetMask("Ground"));
         
         grounded = false;//overwrite no ground can cancel out
         

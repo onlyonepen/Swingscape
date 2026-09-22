@@ -30,7 +30,7 @@ public class SwingState : PlayerState
         manager.GrappleLr.positionCount = 2;
 
         // Calculate initial visual offset
-        float currentOffset = manager.GrappleEnemyOffset;
+        float currentOffset = manager.grappleStats.GrappleEnemyOffset;
         if (grapple != GrappleType.Normal)
         {
             if (manager.RUD.GrappledObject.TryGetComponent<Collider>(out Collider col))
@@ -68,7 +68,7 @@ public class SwingState : PlayerState
         }
 
         // 2. Calculate dynamic offset (checks enemy bounds)
-        float currentOffset = manager.GrappleEnemyOffset;
+        float currentOffset = manager.grappleStats.GrappleEnemyOffset;
         if (grapple != GrappleType.Normal)
         {
             if (manager.RUD.GrappledObject.TryGetComponent<Collider>(out Collider col))
@@ -100,7 +100,7 @@ public class SwingState : PlayerState
             }
         }
 
-        if (manager.Input.SprintPressed && manager.Energy.UseEnergy(manager.Energy.GrappleLeapUsage))
+        if (manager.Input.SprintPressed && manager.Energy.UseEnergy(manager.Energy.stats.GrappleLeapUsage))
         {
             manager.ChangeState(manager.GrappleLeapState);
             if (grapple == GrappleType.Light)
@@ -145,9 +145,9 @@ public class SwingState : PlayerState
         joint.maxDistance = distance * 1f;
         joint.minDistance = distance * 0.25f;
 
-        joint.spring = manager.JointSpring; // Adjust these for "bounciness"
-        joint.damper = manager.JointDamper; // Adjust these to stop swinging forever
-        joint.massScale = manager.JointMassScale;
+        joint.spring = manager.grappleStats.JointSpring; // Adjust these for "bounciness"
+        joint.damper = manager.grappleStats.JointDamper; // Adjust these to stop swinging forever
+        joint.massScale = manager.grappleStats.JointMassScale;
     }
 
     private void drawRope()
@@ -159,8 +159,8 @@ public class SwingState : PlayerState
 
     private void AirControl()
     {
-        float vertical = vertInput * manager.AirControlFwdForce;
-        float horizontal = horiInput * manager.AirControlHorizontalForce;
+        float vertical = vertInput * manager.grappleStats.AirControlFwdForce;
+        float horizontal = horiInput * manager.grappleStats.AirControlHorizontalForce;
 
         Vector3 TotalForceDir = (manager.Cam.transform.forward * vertical) + (manager.Cam.transform.right * horizontal);
         manager.rb.AddForce(TotalForceDir * Time.deltaTime, ForceMode.Force);
@@ -168,14 +168,14 @@ public class SwingState : PlayerState
 
     private void SwingDash()
     {
-        if (manager.Input.JumpPressed && !SwingDashed && manager.Energy.UseEnergy(manager.Energy.GrappleDashUsage))
+        if (manager.Input.JumpPressed && !SwingDashed && manager.Energy.UseEnergy(manager.Energy.stats.GrappleDashUsage))
         {
-            float dashForce = manager.rb.linearVelocity.magnitude * manager.SwingDashPower * currentDist * 0.001f;
+            float dashForce = manager.rb.linearVelocity.magnitude * manager.grappleStats.SwingDashPower * currentDist * 0.001f;
             float initialVelocity = manager.rb.linearVelocity.magnitude;
 
             float newForce = dashForce + initialVelocity;
 
-            newForce = Mathf.Clamp(newForce, manager.SwingDashMinPower, manager.SwingDashMaxPower);
+            newForce = Mathf.Clamp(newForce, manager.grappleStats.SwingDashMinPower, manager.grappleStats.SwingDashMaxPower);
             manager.rb.AddForce(manager.Cam.transform.forward.normalized * newForce, ForceMode.VelocityChange);
             SwingDashed = true;
         }

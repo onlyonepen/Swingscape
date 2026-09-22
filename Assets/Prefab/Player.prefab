@@ -461,12 +461,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GrappleTargeting
   predictionPoint: {fileID: 0}
   targetCanvas: {fileID: 0}
-  GrappleMaxDistance: 60
   Swingable:
     serializedVersion: 2
-    m_Bits: 64
-  minAimAssistRadius: 1
-  maxAimAssistRadius: 8
+    m_Bits: 768
+  stats: {fileID: 11400000, guid: c2a1856643801fa3c645e91e00a3a4d2, type: 2}
 --- !u!1 &997458973062282323
 GameObject:
   m_ObjectHideFlags: 0
@@ -1766,7 +1764,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cae059de92580c84a809da0f8c114c95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  curreentState: 
+  curreentState: PlayerBaseState
   Manager: {fileID: 2059734302548415395}
   rb: {fileID: 4392758648432768490}
   PBM: {fileID: 8042768861579844614}
@@ -1778,41 +1776,16 @@ MonoBehaviour:
   footstepManager: {fileID: 1093884470809952343}
   TerrainLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 576
   feetTrans: {fileID: 8362446349990437176}
-  minFov: 70
-  maxFov: 120
-  fovSmoothSpeed: 10
-  fovChangeTreshold: 25
-  MaxSpeedForFovChange: 50
-  WallRunAccel: 50
-  WallRunMaxSpeed: 10
-  WallClimbSpeed: 4
-  WallJumpForce: 12
-  WallCheckDistance: 1
-  GroundCheckDistance: 2
+  cameraStats: {fileID: 11400000, guid: d8040ed7e4d692ee4182bddb79173706, type: 2}
+  locomotionStats: {fileID: 11400000, guid: 4489f61aea1408ca55803fbf620c750c, type: 2}
+  grappleStats: {fileID: 11400000, guid: c2a1856643801fa3c645e91e00a3a4d2, type: 2}
   SideRotateJoint: {fileID: 844274247095529404}
-  SlideSpeedMult: 0.5
-  SlideSpeedTreshold: 11
-  SlideFriction: 0.95
-  PlayerHeightOffset: 1.6
-  MantleFrontCastDist: 1.2
   grappleGun: {fileID: 9136578765205090199}
   Guntip: {fileID: 2787582631736713585}
   GrappleArm: {fileID: 4250682064148445102}
-  GrappleEnemyOffset: 1.5
-  GrappleTravelTime: 0.25
   GrappleLr: {fileID: 1304358317487347376}
-  JointSpring: 4.5
-  JointDamper: 3
-  JointMassScale: 4.5
-  AirControlFwdForce: 800
-  AirControlHorizontalForce: 600
-  SwingDashPower: 6
-  SwingDashMaxPower: 17
-  SwingDashMinPower: 5
-  PullIntoSpeed: 40
-  OvershootYAxis: 2
   canGrapple: 1
   redScreenOverlay: {fileID: 0}
   deathDuration: 0.5
@@ -1833,46 +1806,17 @@ MonoBehaviour:
   _col: {fileID: 419421687353091346}
   GroundLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 576
+  stats: {fileID: 11400000, guid: 65ba0290b86ea842666a85af8b13e51d, type: 2}
+  cameraStats: {fileID: 11400000, guid: d8040ed7e4d692ee4182bddb79173706, type: 2}
   playerCamera: {fileID: 1187486856530276618}
-  fov: 60
-  invertCamera: 0
   cameraCanMove: 1
-  mouseSensitivity: 2
-  maxLookAngle: 85
   lockCursor: 1
   playerCanMove: 1
-  walkSpeed: 17
-  acceleration: 70
-  deceleration: 130
-  AirMaxSpeed: 100
   enableJump: 1
-  hasVariableJumpHeight: 1
-  jumpPower: 10
-  coyoteTime: 0.15
-  jumpBuffferingTime: 0.2
   isGrounded: 0
-  RealisticGravity: 18
-  hasFallingExtraGrav: 1
-  extraGravityAmount: 7
-  hasApexModifier: 0
-  apexVertVelocityDetection: 0.7
-  apexSpeedMult: 1.2
-  apexFloatPower: 1
-  hasMaxFallSpeed: 0
-  terminalVelocity: -15
-  enableCrouch: 1
-  holdToCrouch: 0
-  crouchHeight: 0.75
-  speedReduction: 0.5
   FloatingCapsuleActive: 1
-  rideHeight: 1
-  rideSpringStrength: 200
-  rideSpringDamper: 20
-  enableHeadBob: 1
   joint: {fileID: 6563545820813172047}
-  bobSpeed: 10
-  bobAmount: {x: 0, y: 0.05, z: 0}
 --- !u!114 &2719220534934709590
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1886,12 +1830,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHpManager
   HpContainer: {fileID: 0}
-  maxHp: 3
+  stats: {fileID: 11400000, guid: 7f838382d033917978aa4ba515ca40ad, type: 2}
   CurrentHp: 0
   IsDead: 0
   isInvulnerable: 0
   InvulnerabilityEfffect: {fileID: 0}
-  iFrameDuration: 0.5
 --- !u!114 &6960733634792694885
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1904,13 +1847,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e28ba78af5e631b498da7a3fd0d57fd5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerEnergy
-  useEnergy: 0
-  MaxEnergy: 100
-  InitialThrowUsage: 20
-  GrappleLeapUsage: 40
-  GrappleDashUsage: 10
-  EnergyRegeneration: 5
-  GroundedEnergyRegeneration: 50
+  stats: {fileID: 11400000, guid: ed71f1fdd0f44efdcc1a59801e5ddb2e, type: 2}
   currentEnergy: 0
 --- !u!54 &4392758648432768490
 Rigidbody:

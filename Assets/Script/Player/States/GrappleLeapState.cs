@@ -36,7 +36,7 @@ public class GrappleLeapState : PlayerState
         manager.GuntipPointToGrapple();
 
         Vector3 trueTarget = manager.RUD.GrapplePoint;
-        float currentOffset = manager.GrappleEnemyOffset;
+        float currentOffset = manager.grappleStats.GrappleEnemyOffset;
 
         // Check if object is an enemy and dynamically calculate offset from collider size
         if (Grappleable.Resolve(manager.RUD.GrappledObject) != GrappleType.Normal)
@@ -89,8 +89,8 @@ public class GrappleLeapState : PlayerState
 
     private void AirControl()
     {
-        float vertical = manager.Input.Move.y * manager.AirControlFwdForce;
-        float horizontal = manager.Input.Move.x * manager.AirControlHorizontalForce;
+        float vertical = manager.Input.Move.y * manager.grappleStats.AirControlFwdForce;
+        float horizontal = manager.Input.Move.x * manager.grappleStats.AirControlHorizontalForce;
 
         Vector3 TotalForceDir = (manager.Cam.transform.forward * vertical) + (manager.Cam.transform.right * horizontal);
         manager.rb.AddForce(TotalForceDir * Time.deltaTime, ForceMode.Force);
@@ -102,9 +102,9 @@ public class GrappleLeapState : PlayerState
                                 manager.transform.position.z);
 
         float grapplePointRelativeYPos = manager.RUD.GrapplePoint.y - lowestPoint.y;
-        float highestPointOnArc = grapplePointRelativeYPos + manager.OvershootYAxis;
+        float highestPointOnArc = grapplePointRelativeYPos + manager.grappleStats.OvershootYAxis;
 
-        if (grapplePointRelativeYPos < 0) highestPointOnArc = manager.OvershootYAxis;
+        if (grapplePointRelativeYPos < 0) highestPointOnArc = manager.grappleStats.OvershootYAxis;
 
         manager.rb.linearVelocity = calculateJumpVelocity(manager.transform.position, manager.RUD.GrapplePoint, highestPointOnArc);
     }
