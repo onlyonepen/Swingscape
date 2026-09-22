@@ -3050,6 +3050,17 @@ Transform:
   - {fileID: 1441013002}
   m_Father: {fileID: 953521007}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &154734315 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5150160852277615116, guid: 88f5baf0d66003b45bcc3895325cd2ce, type: 3}
+  m_PrefabInstance: {fileID: 1081412935}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &155047085
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13568,14 +13579,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8789dda52f738b74e9e664a5fc53e572, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointManager
-  ObjectiveText: {fileID: 0}
+  ObjectiveText: {fileID: 154734315}
   StartPoint: {fileID: 875230985}
   AllFloor:
-  - StageGameObject: {fileID: 1505521922}
-    RespawnPoint: {fileID: 693031996}
-    EnemyParentGroup: {fileID: 872537879}
-    EnemyList: []
-    SlidingDoors: {fileID: 622910634}
   - StageGameObject: {fileID: 152004936}
     RespawnPoint: {fileID: 2034202593}
     EnemyParentGroup: {fileID: 1406997977}

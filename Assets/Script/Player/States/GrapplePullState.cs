@@ -37,7 +37,14 @@ public class GrapplePullState : PlayerState
         initialObjPos = grappledObj.transform.position;
         
         grappledObj.TryGetComponent<Rigidbody>(out grappledObjRb);
-        
+
+        if (grappledObjRb != null)
+        {
+            // Clear any constraints set in the inspector (e.g. FreezePosition to keep the
+            // object stable pre-grapple) so MovePosition below can actually move it.
+            grappledObjRb.constraints = RigidbodyConstraints.None;
+        }
+
         initialPlayerPosition = manager.transform.position;
         initialEnemyDistance = Vector3.Distance(initialPlayerPosition, manager.RUD.GrappledObject.transform.position);
         expectedDuration = initialEnemyDistance / 40;

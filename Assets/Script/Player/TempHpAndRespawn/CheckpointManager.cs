@@ -20,7 +20,6 @@ public class CheckpointManager : MonoBehaviour
     public void debugNextFloor()
     {
         GameValue.CurrentFloor++;
-        GameValue.ObtainedGrapple = true;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
     
@@ -44,16 +43,13 @@ public class CheckpointManager : MonoBehaviour
     private void Update()
     {
         if(Input.GetKeyDown(KeyCode.P)) debugNextFloor();
-        if(GameValue.ObtainedGrapple) CheckEnemy();
+        CheckEnemy();
     }
 
     private void Start()
     {
         //Respawn
         SpawnTower();
-
-        // Explicit sync in both directions: a fresh run (ObtainedGrapple == false) locks grapple back down.
-        GlobalReference.Instance.player.Locomotion.canGrapple = GameValue.ObtainedGrapple;
     }
 
     public void NextFloor()
@@ -89,8 +85,7 @@ public class CheckpointManager : MonoBehaviour
             else if (i + 1 == GameValue.CurrentFloor)
             {
                 thisFloor.StageGameObject.SetActive(true);
-                if (!GameValue.ObtainedGrapple) SetPlayerPosAndRot(StartPoint);
-                else SetPlayerPosAndRot(thisFloor.RespawnPoint);
+                SetPlayerPosAndRot(thisFloor.RespawnPoint);
             }
             else
             {

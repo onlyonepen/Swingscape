@@ -39,8 +39,9 @@ public class PlayerStateManager : MonoBehaviour
     internal Quaternion initialHandRot;
     public LineRenderer GrappleLr;
 
-    // Open by default: only the CheckpointManager (start-of-run progression gate) locks this.
-    [HideInInspector] public bool canGrapple = true;
+    [Header("Grapple Unlock")]
+    [Tooltip("Whether the player has the grapple hook when the scene starts. Overridden at runtime by CheckpointManager/ObtainGrapple based on GameValue.ObtainedGrapple.")]
+    public bool canGrapple = true;
 
     // Wall jump coyote time — refreshed every frame WallRunningState is actually touching a wall,
     // so a jump pressed shortly after leaving the wall (or the wall run ending) still fires.
