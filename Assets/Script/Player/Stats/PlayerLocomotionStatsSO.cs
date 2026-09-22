@@ -10,6 +10,8 @@ public class PlayerLocomotionStatsSO : ScriptableObject
     public float WallJumpForce = 10;
     public float WallCheckDistance = 1f;
     public float GroundCheckDistance = 2f;
+    public float WallJumpCoyoteTime = 0.15f;
+    public float WallJumpLockoutTime = 0.5f;
 
     [Header("Sliding")]
     public float SlideSpeedMult = 0.2f;

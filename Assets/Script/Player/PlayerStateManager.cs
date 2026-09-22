@@ -42,6 +42,17 @@ public class PlayerStateManager : MonoBehaviour
     // Open by default: only the CheckpointManager (start-of-run progression gate) locks this.
     [HideInInspector] public bool canGrapple = true;
 
+    // Wall jump coyote time — refreshed every frame WallRunningState is actually touching a wall,
+    // so a jump pressed shortly after leaving the wall (or the wall run ending) still fires.
+    private float wallJumpCoyoteTimer;
+    private Vector3 lastWallJumpNormal;
+    public bool CanCoyoteWallJump => wallJumpCoyoteTimer > 0f;
+
+    // Blocks re-entering wall run for a moment after a wall jump so the player doesn't
+    // instantly reattach to the same wall.
+    private float wallRunLockoutTimer;
+    public bool CanWallRun => wallRunLockoutTimer <= 0f;
+
     [Header("DiedState")]
     public Image redScreenOverlay;
     public float deathDuration = 1f;
@@ -106,6 +117,9 @@ public class PlayerStateManager : MonoBehaviour
 
     void Update()
     {
+        wallJumpCoyoteTimer -= Time.deltaTime;
+        wallRunLockoutTimer -= Time.deltaTime;
+
         CurrentState.OnStateUpdate();
         EnergyRegen();
         UpdateFov();
@@ -143,6 +157,25 @@ public class PlayerStateManager : MonoBehaviour
             ChangeState(state);
         }
     }
+    public void RefreshWallJumpCoyote(Vector3 wallNormal)
+    {
+        wallJumpCoyoteTimer = locomotionStats.WallJumpCoyoteTime;
+        lastWallJumpNormal = wallNormal;
+    }
+
+    public void ApplyWallJump(Vector3 wallNormal)
+    {
+        Vector3 jumpDir = (wallNormal.normalized * locomotionStats.WallJumpForce) + (transform.up.normalized * PBM.stats.jumpPower);
+        rb.AddForce(jumpDir, ForceMode.Impulse);
+        wallJumpCoyoteTimer = 0f;
+        wallRunLockoutTimer = locomotionStats.WallJumpLockoutTime;
+    }
+
+    public void ApplyCoyoteWallJump()
+    {
+        ApplyWallJump(lastWallJumpNormal);
+    }
+
     public Vector3 GroundNormal()
     {
         if(!PBM.isGrounded) return Vector3.zero;

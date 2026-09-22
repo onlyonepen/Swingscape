@@ -30,8 +30,15 @@ public class PlayerBaseState : PlayerState
         base.OnStateUpdate();
 
         manager.Targeting.Predict();
-        
-        WallRunCheck();
+
+        if (manager.Input.JumpPressed && manager.CanCoyoteWallJump)
+        {
+            manager.ApplyCoyoteWallJump();
+        }
+        else
+        {
+            WallRunCheck();
+        }
         MantleCheck();
         SlideCheck();
         
@@ -55,7 +62,7 @@ public class PlayerBaseState : PlayerState
         bool wallRight = wallRightLower && wallRightUpper;
         bool wallLeft = wallLeftLower && wallLeftUpper;
         
-        if ((wallRight || wallLeft) && !manager.PBM.isGrounded && manager.Input.ForwardHeld)
+        if ((wallRight || wallLeft) && !manager.PBM.isGrounded && manager.Input.ForwardHeld && manager.CanWallRun)
         {
             manager.ChangeState(manager.WallRunState);
         }

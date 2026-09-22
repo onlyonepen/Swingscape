@@ -32,6 +32,13 @@ public class WallRunningState : PlayerState
         manager.footstepManager.SetFootstepsEnabled(true);
 
         WallRunCheck();
+
+        if (wallLeft || wallRight)
+        {
+            Vector3 currentWallNormal = wallRight ? rightWallHit.normal : leftWallHit.normal;
+            manager.RefreshWallJumpCoyote(currentWallNormal);
+        }
+
         if (wallLeft) rotateTween = manager.SideRotateJoint.DOLocalRotate(new Vector3(0, 0, -15f), 0.5f);
         if (wallRight) rotateTween = manager.SideRotateJoint.DOLocalRotate(new Vector3(0, 0, 15f), 0.5f);
 
@@ -66,10 +73,7 @@ public class WallRunningState : PlayerState
     private void WallJump()
     {
         Vector3 wallNormal = wallRight ? rightWallHit.normal : leftWallHit.normal;
-
-        Vector3 jumpDir = (wallNormal.normalized * manager.locomotionStats.WallJumpForce) + (manager.transform.up.normalized * manager.PBM.stats.jumpPower);
-
-        manager.rb.AddForce(jumpDir, ForceMode.Impulse);
+        manager.ApplyWallJump(wallNormal);
     }
 
     private void WallRunMovement()
