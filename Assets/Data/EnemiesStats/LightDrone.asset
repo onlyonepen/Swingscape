@@ -15,3 +15,4 @@ MonoBehaviour:
   DetectionRange: 100
   MoveSpeed: 13
   AttackFrequentcy: 1
+  MaxElevationOffset: 15

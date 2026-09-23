@@ -119,11 +119,16 @@ namespace Script.Enemy.State.Aggro
         
             Vector3 lateralMove = (strafeLeftRight + radialCorrection * 0.5f).normalized * Enemy.Stat.MoveSpeed;
         
-            float hoverHeightOffset = 4.0f; 
+            float hoverHeightOffset = 4.0f;
             float targetY = playerPos.y + hoverHeightOffset;
             float yDifference = targetY - dronePos.y;
-            float verticalVelocity = Mathf.Clamp(yDifference, -2.5f, 2.5f) * 2f; 
-        
+
+            // If the player's elevation has drifted too far away (e.g. grappled up to a rooftop),
+            // stop chasing vertically and just hold the current elevation instead of climbing/diving forever.
+            float verticalVelocity = Mathf.Abs(playerPos.y - dronePos.y) > Enemy.Stat.MaxElevationOffset
+                ? 0f
+                : Mathf.Clamp(yDifference, -2.5f, 2.5f) * 2f;
+
             Vector3 finalVelocity = new Vector3(lateralMove.x, verticalVelocity, lateralMove.z);
             Enemy.rb.linearVelocity = finalVelocity;
         

@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: 081202e6a042f1c4eaad78908df243cb
   - enabled: 1
+    path: Assets/Scenes/P1Level.unity
+    guid: d22a88a446e947442b8aefaad77bba0d
+  - enabled: 1
     path: Assets/Scenes/The bunker.unity
     guid: 8e65e087d79bf2d4da3ce333746f3d0b
   - enabled: 0
