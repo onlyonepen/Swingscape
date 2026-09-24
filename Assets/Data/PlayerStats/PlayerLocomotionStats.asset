@@ -13,11 +13,13 @@ MonoBehaviour:
   m_Name: PlayerLocomotionStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLocomotionStatsSO
   WallRunAccel: 50
-  WallRunMaxSpeed: 10
+  WallRunMaxSpeed: 12
   WallRunOverspeedDampRate: 2
   WallJumpForce: 10
   WallCheckDistance: 0.7
   GroundCheckDistance: 2
+  WallJumpCoyoteTime: 0.15
+  WallJumpLockoutTime: 0.5
   SlideSpeedMult: 0.5
   SlideSpeedTreshold: 11
   SlideFriction: 0.95

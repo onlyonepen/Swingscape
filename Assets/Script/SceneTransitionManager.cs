@@ -14,6 +14,7 @@ public class SceneTransitionManager : MonoBehaviour
 
     private CanvasGroup canvasGroup;
     private bool isTransitioning;
+    private float storedVolume = 1f;
 
     private void Awake()
     {
@@ -73,8 +74,12 @@ public class SceneTransitionManager : MonoBehaviour
     {
         isTransitioning = true;
 
+        storedVolume = AudioListener.volume;
+        AudioListener.volume = 0f;
+
         bool fadeInDone = false;
         canvasGroup.DOFade(0f, fadeDuration).SetUpdate(true).OnComplete(() => fadeInDone = true);
+        DOTween.To(() => AudioListener.volume, v => AudioListener.volume = v, storedVolume, fadeDuration).SetUpdate(true);
         yield return new WaitUntil(() => fadeInDone);
 
         canvasGroup.blocksRaycasts = false;
@@ -98,8 +103,11 @@ public class SceneTransitionManager : MonoBehaviour
         isTransitioning = true;
         canvasGroup.blocksRaycasts = true;
 
+        storedVolume = AudioListener.volume;
+
         bool fadeOutDone = false;
         canvasGroup.DOFade(1f, fadeDuration).SetUpdate(true).OnComplete(() => fadeOutDone = true);
+        DOTween.To(() => AudioListener.volume, v => AudioListener.volume = v, 0f, fadeDuration).SetUpdate(true);
         yield return new WaitUntil(() => fadeOutDone);
 
         AsyncOperation op = sceneName != null
@@ -113,6 +121,7 @@ public class SceneTransitionManager : MonoBehaviour
 
         bool fadeInDone = false;
         canvasGroup.DOFade(0f, fadeDuration).SetUpdate(true).OnComplete(() => fadeInDone = true);
+        DOTween.To(() => AudioListener.volume, v => AudioListener.volume = v, storedVolume, fadeDuration).SetUpdate(true);
         yield return new WaitUntil(() => fadeInDone);
 
         canvasGroup.blocksRaycasts = false;

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2602a3e19ae918b4e97aeceaa665ecf4, type: 3}
   m_Name: PlayerMovementStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementStatsSO
-  walkSpeed: 12
+  walkSpeed: 18
   acceleration: 70
   deceleration: 130
   AirMaxSpeed: 65

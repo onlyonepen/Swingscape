@@ -40,10 +40,13 @@ public class GrappleTargeting : MonoBehaviour
     /// </summary>
     public RaycastHit Predict()
     {
-        LayerMask obstacleMask = GlobalReference.Instance.TerrainLayer;
         // Everything except the player: enemy targets are told apart from plain scenery by
         // Grappleable component presence, not a layer, so the query mask stays broad.
         LayerMask queryMask = ~GlobalReference.Instance.playerLayer;
+        // Blocking check must use the same broad mask as the query: a nearer swingable point
+        // or enemy is a valid line-of-sight blocker too, not just terrain, otherwise aim assist
+        // can pick a farther target hidden behind a closer one.
+        LayerMask obstacleMask = queryMask;
 
         // --- 1. DIRECT RAYCAST ---
         RaycastHit directHitEnemy = new RaycastHit();
