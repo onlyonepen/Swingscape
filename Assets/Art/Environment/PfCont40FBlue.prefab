@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9156541278626001753}
-  m_Layer: 6
+  m_Layer: 9
   m_Name: PfCont40FBlue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -94,7 +94,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -927199367670048503, guid: 8bb941787bcc0074f878e0e2f9b99dfe, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: -927199367670048503, guid: 8bb941787bcc0074f878e0e2f9b99dfe, type: 3}
       propertyPath: m_StaticEditorFlags

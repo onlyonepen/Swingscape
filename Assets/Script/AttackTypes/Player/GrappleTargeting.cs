@@ -22,10 +22,13 @@ public class GrappleTargeting : MonoBehaviour
     public PlayerGrappleStatsSO stats;
 
     private Camera cam;
+    private PlayerStateManager stateManager;
 
     private void Awake()
     {
-        cam = GetComponentInParent<PlayerManager>().Cam;
+        PlayerManager playerManager = GetComponentInParent<PlayerManager>();
+        cam = playerManager.Cam;
+        stateManager = playerManager.Locomotion;
     }
 
     /// <summary>Hide the prediction reticle (states call this when grapple isn't active).</summary>
@@ -40,6 +43,12 @@ public class GrappleTargeting : MonoBehaviour
     /// </summary>
     public RaycastHit Predict()
     {
+        if (!stateManager.canGrapple)
+        {
+            HidePredictionPoint();
+            return new RaycastHit();
+        }
+
         // Everything except the player: enemy targets are told apart from plain scenery by
         // Grappleable component presence, not a layer, so the query mask stays broad.
         LayerMask queryMask = ~GlobalReference.Instance.playerLayer;

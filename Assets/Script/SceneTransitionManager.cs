@@ -3,6 +3,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using VInspector;
 
 public class SceneTransitionManager : MonoBehaviour
 {
@@ -85,6 +86,12 @@ public class SceneTransitionManager : MonoBehaviour
         canvasGroup.blocksRaycasts = false;
         isTransitioning = false;
     }
+
+    [Button]
+    public void checkAudio()
+    {
+        Debug.unityLogger.Log(AudioListener.volume);
+    } 
 
     public void LoadScene(string sceneName)
     {

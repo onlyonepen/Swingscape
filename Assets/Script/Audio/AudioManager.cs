@@ -24,7 +24,7 @@ public class AudioManager : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(this.gameObject);
+        //DontDestroyOnLoad(this.gameObject);
 
         // 1. Initialize the fast-lookup dictionary
         audioDictionary = new Dictionary<string, AudioDataSO>();
