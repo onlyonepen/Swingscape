@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VInspector;
@@ -13,9 +15,16 @@ public class SceneTransitionManager : MonoBehaviour
     [SerializeField] private float fadeDuration = 1f;
     [SerializeField] private Color fadeColor = Color.black;
 
+    private static float masterVolume = 1f;
+
     private CanvasGroup canvasGroup;
     private bool isTransitioning;
-    private float storedVolume = 1f;
+
+    public static void SetMasterVolume(float volume)
+    {
+        masterVolume = volume;
+        AudioListener.volume = volume;
+    }
 
     private void Awake()
     {
@@ -34,6 +43,14 @@ public class SceneTransitionManager : MonoBehaviour
     private void Start()
     {
         StartCoroutine(FadeInRoutine());
+    }
+
+    private void Update()
+    {
+        if (Keyboard.current.f10Key.wasPressedThisFrame)
+        {
+            checkAudio();
+        }
     }
 
     private void OnDestroy()
@@ -75,12 +92,11 @@ public class SceneTransitionManager : MonoBehaviour
     {
         isTransitioning = true;
 
-        storedVolume = AudioListener.volume;
         AudioListener.volume = 0f;
 
         bool fadeInDone = false;
         canvasGroup.DOFade(0f, fadeDuration).SetUpdate(true).OnComplete(() => fadeInDone = true);
-        DOTween.To(() => AudioListener.volume, v => AudioListener.volume = v, storedVolume, fadeDuration).SetUpdate(true);
+        DOTween.To(() => AudioListener.volume, v => AudioListener.volume = v, masterVolume, fadeDuration).SetUpdate(true);
         yield return new WaitUntil(() => fadeInDone);
 
         canvasGroup.blocksRaycasts = false;
@@ -110,8 +126,6 @@ public class SceneTransitionManager : MonoBehaviour
         isTransitioning = true;
         canvasGroup.blocksRaycasts = true;
 
-        storedVolume = AudioListener.volume;
-
         bool fadeOutDone = false;
         canvasGroup.DOFade(1f, fadeDuration).SetUpdate(true).OnComplete(() => fadeOutDone = true);
         DOTween.To(() => AudioListener.volume, v => AudioListener.volume = v, 0f, fadeDuration).SetUpdate(true);
@@ -128,7 +142,7 @@ public class SceneTransitionManager : MonoBehaviour
 
         bool fadeInDone = false;
         canvasGroup.DOFade(0f, fadeDuration).SetUpdate(true).OnComplete(() => fadeInDone = true);
-        DOTween.To(() => AudioListener.volume, v => AudioListener.volume = v, storedVolume, fadeDuration).SetUpdate(true);
+        DOTween.To(() => AudioListener.volume, v => AudioListener.volume = v, masterVolume, fadeDuration).SetUpdate(true);
         yield return new WaitUntil(() => fadeInDone);
 
         canvasGroup.blocksRaycasts = false;

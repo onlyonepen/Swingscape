@@ -15,7 +15,8 @@ public class SwingState : PlayerState
     private float horiInput;
 
     private bool SwingDashed = false;
-    
+    public bool HasSwingDashed => SwingDashed;
+
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {

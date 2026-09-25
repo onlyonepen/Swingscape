@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e07f88c6539fafb4385067e623a18593, type: 3}
   m_Name: PlayerGrappleStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerGrappleStatsSO
-  GrappleMaxDistance: 60
+  GrappleMaxDistance: 80
   minAimAssistRadius: 1
   maxAimAssistRadius: 8
   GrappleEnemyOffset: 1.5

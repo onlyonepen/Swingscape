@@ -15,7 +15,6 @@ namespace Script.Enemy.State.Death
         public override void OnStateEnter()
         {
             base.OnStateEnter();
-            Enemy.rb.constraints = RigidbodyConstraints.None;
             Enemy.rb.constraints = RigidbodyConstraints.FreezeRotation;
             Enemy.PlayDeathParticles();
         }

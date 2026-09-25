@@ -13,6 +13,6 @@ public class VolumeController : MonoBehaviour
 
     public void SetGlobalVolume(float volume)
     {
-        AudioListener.volume = volume;
+        SceneTransitionManager.SetMasterVolume(volume);
     }
 }

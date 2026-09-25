@@ -12,7 +12,6 @@ namespace Script.Enemy.State.GetPull
         public override void OnStateEnter()
         {
             base.OnStateEnter();
-            Enemy.rb.constraints = RigidbodyConstraints.None;
             Enemy.rb.constraints = RigidbodyConstraints.FreezeRotation;
         }
 

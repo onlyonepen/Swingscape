@@ -16,6 +16,8 @@ MonoBehaviour:
   acceleration: 70
   deceleration: 130
   AirMaxSpeed: 65
+  airAcceleration: 5
+  airMaxSpeedLerpSpeed: 60
   hasVariableJumpHeight: 1
   jumpPower: 10
   coyoteTime: 0.15

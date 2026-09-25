@@ -26,6 +26,9 @@ namespace Script.Enemy.State.Aggro
             base.OnStateEnter();
             AggroTimer = AggroMax;
             NextAttackTime = Enemy.Stat.AttackFrequentcy + Random.Range(-1f, 1f);
+            Enemy.rb.linearVelocity = Vector3.zero;
+            Enemy.rb.angularVelocity = Vector3.zero;
+            Enemy.rb.constraints = RigidbodyConstraints.FreezeAll;
         }
 
         public override void OnStateUpdate()
@@ -33,12 +36,6 @@ namespace Script.Enemy.State.Aggro
             AggroTimer -= Time.deltaTime;
             playerCheck();
             StrafeAroundPlayer();
-        }
-
-        public override void OnStateExit()
-        {
-            Enemy.rb.linearVelocity = Vector3.zero;
-            Enemy.rb.angularVelocity = Vector3.zero;
         }
 
         private void playerCheck()
@@ -130,7 +127,7 @@ namespace Script.Enemy.State.Aggro
                 : Mathf.Clamp(yDifference, -2.5f, 2.5f) * 2f;
 
             Vector3 finalVelocity = new Vector3(lateralMove.x, verticalVelocity, lateralMove.z);
-            Enemy.rb.linearVelocity = finalVelocity;
+            Enemy.transform.position += finalVelocity * Time.deltaTime;
         
             float relaxedY = Mathf.Lerp(playerPos.y, dronePos.y, 0.4f);
             Vector3 relaxedLookTarget = new Vector3(playerPos.x, relaxedY, playerPos.z);

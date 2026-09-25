@@ -25,6 +25,8 @@ public class PlayerAttacking : MonoBehaviour
 
     private PlayerManager manager;
 
+    public PlayerAttackState CurrentAttackState => currentPlayerAttackState;
+
     /// <summary>Active weapon mode. Null = the built-in melee combo in this class.
     /// Assign via EquipMode() when you add real weapon modes later; the primary-attack
     /// input then routes to the mode instead of the built-in melee.</summary>
@@ -121,57 +123,28 @@ public class PlayerAttacking : MonoBehaviour
         
         nextStateMethod.Invoke();
     }
-    // --- UPDATED: Continuous Scanning & Caching Coroutine ---
     private IEnumerator DelayedExecuteAttack(Transform activePlane, float delayTime)
     {
-        float timer = 0f;
-        bool anyTargetLocked = false;
+        // Wait out the visual wind-up, then check the hitbox exactly once, on the
+        // frame the swing actually connects (matches PlayerAttackArea.GetTargetsInSwing's contract).
+        yield return new WaitForSeconds(delayTime);
 
-        // NEW: The Cache. We will store targets here the exact moment we see them.
-        HashSet<GameObject> lockedTargets = new HashSet<GameObject>();
-
-        // Loop every frame until our visual wind-up delay is reached
-        string audioToPlay = "Melee";
-        while (timer < delayTime)
-        {
-            if (attackArea != null)
-            {
-                GameObject[] earlyTargets = attackArea.GetTargetsInSwing();
-
-                if (earlyTargets != null && earlyTargets.Length > 0)
-                {
-                    // Lock them in! Even if you slide past them before the swing finishes, they are marked for the cut.
-                    foreach (GameObject target in earlyTargets)
-                    {
-                        if (target == null || !lockedTargets.Add(target)) continue;
-
-                        anyTargetLocked = true;
-                    }
-                }
-            }
-
-            if (anyTargetLocked) audioToPlay = "MeleeHit";
-
-            timer += Time.deltaTime;
-            yield return null;
-        }
-        AudioManager.Instance.PlayAudioByName(audioToPlay, transform.position, true);
-
-        // ONE FINAL CHECK: Catch anyone who entered the hitbox on the exact execution frame
+        HashSet<GameObject> targets = new HashSet<GameObject>();
         if (attackArea != null)
         {
-            GameObject[] finalTargets = attackArea.GetTargetsInSwing();
-            if (finalTargets != null && finalTargets.Length > 0)
+            GameObject[] hits = attackArea.GetTargetsInSwing();
+            if (hits != null)
             {
-                foreach (GameObject target in finalTargets)
+                foreach (GameObject target in hits)
                 {
-                    lockedTargets.Add(target);
+                    if (target != null) targets.Add(target);
                 }
             }
         }
 
-        // The wind-up is over. Pass the locked targets to the hitbox logic!
-        ExecuteHitboxLogic(activePlane, lockedTargets);
+        AudioManager.Instance.PlayAudioByName(targets.Count > 0 ? "MeleeHit" : "Melee", transform.position, true);
+
+        ExecuteHitboxLogic(activePlane, targets);
     }
 
     // --- UPDATED: Now receives the locked targets ---

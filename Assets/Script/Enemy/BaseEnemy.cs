@@ -96,6 +96,8 @@ namespace Script.Enemy
             if (DeathParticles == null) return;
             DeathParticles.gameObject.SetActive(false);
             DeathParticles.gameObject.SetActive(true);
+            DeathParticles.gameObject.transform.parent = null;
+            DeathParticles.Play();
         }
 
         public void Death()

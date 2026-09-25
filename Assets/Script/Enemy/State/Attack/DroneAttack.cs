@@ -21,7 +21,7 @@ namespace Script.Enemy.State.Attack
         {
             base.OnStateEnter();
             shoted = false;
-            Enemy.rb.constraints =  RigidbodyConstraints.FreezePosition;
+            Enemy.rb.constraints = RigidbodyConstraints.FreezeAll;
             Enemy.ChargeUpParticles.Play();
             
             ChargeUpSound = AudioManager.Instance.PlayAudioByName("DroneCharge", Enemy.transform.position);
@@ -43,8 +43,6 @@ namespace Script.Enemy.State.Attack
 
         public override void OnStateExit()
         {
-            Enemy.rb.constraints =  RigidbodyConstraints.None;
-            Enemy.rb.constraints =  RigidbodyConstraints.FreezeRotation;
             Enemy.ChargeUpParticles.Stop();
         }
 

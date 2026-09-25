@@ -38,13 +38,6 @@ public class GrapplePullState : PlayerState
         
         grappledObj.TryGetComponent<Rigidbody>(out grappledObjRb);
 
-        if (grappledObjRb != null)
-        {
-            // Clear any constraints set in the inspector (e.g. FreezePosition to keep the
-            // object stable pre-grapple) so MovePosition below can actually move it.
-            grappledObjRb.constraints = RigidbodyConstraints.None;
-        }
-
         initialPlayerPosition = manager.transform.position;
         initialEnemyDistance = Vector3.Distance(initialPlayerPosition, manager.RUD.GrappledObject.transform.position);
         expectedDuration = initialEnemyDistance / 40;
@@ -131,12 +124,11 @@ public class GrapplePullState : PlayerState
         Vector3 origin = manager.Cam.transform.position + (manager.Cam.transform.forward * 1);
         Vector3 target = initialObjPos;
         Vector3 pos = Vector3.Lerp(target, origin, percent);
-        
-        if (grappledObjRb != null)
-        {
-            grappledObjRb.MovePosition(pos);
-        }
-        else if (grappledObj != null && grappledObj.activeInHierarchy) 
+
+        // Move the transform directly rather than via Rigidbody.MovePosition, since the
+        // enemy state machine (e.g. re-entering Aggro mid-pull) may freeze the rigidbody's
+        // position constraints, which would otherwise stall MovePosition partway through.
+        if (grappledObj != null && grappledObj.activeInHierarchy)
         {
             grappledObj.transform.position = pos;
         }

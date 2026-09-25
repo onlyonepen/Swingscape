@@ -18,6 +18,7 @@ namespace Script.Enemy.State.Attack
         {
             base.OnStateEnter();
             shoted = false;
+            Enemy.rb.constraints = RigidbodyConstraints.FreezeAll;
         }
 
         public override void OnStateUpdate()

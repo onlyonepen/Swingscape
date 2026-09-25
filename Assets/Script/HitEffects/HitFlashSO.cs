@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -7,13 +8,23 @@ public class HitFlashSO : HitEffectSO
     [SerializeField] private float FlashDur = 0.1f;
     [SerializeField] private Material flashMaterial;
 
-    protected override void Apply(GameObject target)
+    private class FlashState
     {
-        FlashRoutine(target);
+        public Renderer[] renderers;
+        public Material[][] originalMaterials;
+        public float endTime;
     }
 
-    private async Task FlashRoutine(GameObject target)
+    private readonly Dictionary<GameObject, FlashState> activeFlashes = new Dictionary<GameObject, FlashState>();
+
+    protected override void Apply(GameObject target)
     {
+        if (activeFlashes.TryGetValue(target, out FlashState existing))
+        {
+            existing.endTime = Time.unscaledTime + FlashDur;
+            return;
+        }
+
         Renderer[] renderers = target.GetComponentsInChildren<Renderer>();
         Material[][] originalMaterials = new Material[renderers.Length][];
 
@@ -26,17 +37,30 @@ public class HitFlashSO : HitEffectSO
             renderers[i].materials = flashMaterials;
         }
 
-        float elapsed = 0f;
-        while (elapsed < FlashDur)
+        FlashState state = new FlashState
         {
-            elapsed += Time.unscaledDeltaTime;
+            renderers = renderers,
+            originalMaterials = originalMaterials,
+            endTime = Time.unscaledTime + FlashDur
+        };
+        activeFlashes[target] = state;
+
+        FlashRoutine(target, state);
+    }
+
+    private async Task FlashRoutine(GameObject target, FlashState state)
+    {
+        while (Time.unscaledTime < state.endTime)
+        {
             await Task.Yield();
         }
 
-        for (int i = 0; i < renderers.Length; i++)
+        for (int i = 0; i < state.renderers.Length; i++)
         {
-            if (renderers[i] != null)
-                renderers[i].materials = originalMaterials[i];
+            if (state.renderers[i] != null)
+                state.renderers[i].materials = state.originalMaterials[i];
         }
+
+        activeFlashes.Remove(target);
     }
 }

@@ -8,6 +8,8 @@ public class PlayerMovementStatsSO : ScriptableObject
     public float acceleration = 50f;
     public float deceleration = 40f;
     public float AirMaxSpeed = 20f;
+    public float airAcceleration = 30f;
+    public float airMaxSpeedLerpSpeed = 5f;
 
     [Header("Jump")]
     public bool hasVariableJumpHeight = true;

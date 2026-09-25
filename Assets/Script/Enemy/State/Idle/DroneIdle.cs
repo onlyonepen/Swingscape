@@ -16,18 +16,12 @@ namespace Script.Enemy.State.Idle
         {
             base.OnStateEnter();
             Enemy.rb.linearVelocity = Vector3.zero;
-            Enemy.rb.constraints =  RigidbodyConstraints.FreezePosition;
+            Enemy.rb.constraints = RigidbodyConstraints.FreezeAll;
         }
 
         public override void OnStateUpdate()
         {
             playerCheck();
-        }
-
-        public override void OnStateExit()
-        {
-            Enemy.rb.constraints =  RigidbodyConstraints.None;
-            Enemy.rb.constraints =  RigidbodyConstraints.FreezeRotation;
         }
 
         private void playerCheck()

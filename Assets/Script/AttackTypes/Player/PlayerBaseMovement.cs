@@ -223,10 +223,10 @@ public class PlayerBaseMovement : MonoBehaviour
         if (playerCanMove)
         {
             Vector3 moveInput = new Vector3(playerInput.MoveRaw.x, 0, playerInput.MoveRaw.y);
+            if (moveInput.magnitude > 1) moveInput.Normalize();
+
             if (isGrounded)
             {
-                if (moveInput.magnitude > 1) moveInput.Normalize();
-
                 Vector3 targetVelocity = transform.TransformDirection(moveInput) * walkSpeed;
 
                 Vector3 currentVelocity = rb.linearVelocity;
@@ -242,9 +242,13 @@ public class PlayerBaseMovement : MonoBehaviour
             }
             else
             {
-                if(rb.linearVelocity.magnitude > stats.AirMaxSpeed)
+                Vector3 airForce = transform.TransformDirection(moveInput) * stats.airAcceleration;
+                rb.AddForce(airForce, ForceMode.Acceleration);
+
+                if (rb.linearVelocity.magnitude > stats.AirMaxSpeed)
                 {
-                    rb.linearVelocity = rb.linearVelocity.normalized * stats.AirMaxSpeed;
+                    Vector3 cappedVelocity = rb.linearVelocity.normalized * stats.AirMaxSpeed;
+                    rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, cappedVelocity, stats.airMaxSpeedLerpSpeed * Time.fixedDeltaTime);
                 }
             }
         }
