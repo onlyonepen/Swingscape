@@ -1,0 +1,25 @@
+{
+    "name": "OnepenTerrainTool.Editor",
+    "rootNamespace": "",
+    "references": [
+        "OnepenTerrainTool",
+        "Unity.Formats.Fbx.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.formats.fbx",
+            "expression": "",
+            "define": "FBX_EXPORTER_PRESENT"
+        }
+    ],
+    "noEngineReferences": false
+}
