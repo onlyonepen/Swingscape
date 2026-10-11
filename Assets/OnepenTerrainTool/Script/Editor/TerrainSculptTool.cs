@@ -633,7 +633,7 @@ public class TerrainSculptTool : EditorTool
     }
 
     /// <summary>Create a project-relative folder (and any missing parents), returning the path, or "Assets" if creation fails.</summary>
-    static string EnsureFolder(string folder)
+    public static string EnsureFolder(string folder)
     {
         if (AssetDatabase.IsValidFolder(folder))
             return folder;

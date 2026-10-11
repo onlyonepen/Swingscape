@@ -354,7 +354,7 @@ public static class TerrainToolActions
 
         string folder = "Assets/OnepenTerrainTool/TerrainData";
         if (!AssetDatabase.IsValidFolder(folder))
-            folder = "Assets";
+            folder = TerrainSculptTool.EnsureFolder(folder);
         string name = string.IsNullOrEmpty(tool.name) ? "Terrain" : tool.name;
         string path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}_Material.mat");
 
@@ -374,7 +374,7 @@ public static class TerrainToolActions
     {
         string folder = "Assets/OnepenTerrainTool/TerrainData";
         if (!AssetDatabase.IsValidFolder(folder))
-            folder = "Assets";
+            folder = TerrainSculptTool.EnsureFolder(folder);
         string name = string.IsNullOrEmpty(tool.name) ? "Terrain" : tool.name;
         return AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}_TextureArray.asset");
     }
@@ -394,9 +394,52 @@ public static class TerrainToolActions
         File.WriteAllBytes(path, tool.SerializeData());
         AssetDatabase.Refresh();
 
+        // Save the terrain material alongside the data, with the same base name, so the
+        // two always travel together (e.g. MyTerrain.bytes + MyTerrain.mat).
+        string matPath = Path.ChangeExtension(path, ".mat");
+        SaveMaterialAtPath(tool, matPath);
+
         var saved = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
         EditorGUIUtility.PingObject(saved);
-        Debug.Log($"[TerrainTool] Saved sculptable terrain data to {path}. " +
-                  "Assign it to 'Startup Data' to load it as the starting terrain.");
+        Debug.Log($"[TerrainTool] Saved sculptable terrain data to {path} and its material to {matPath}. " +
+                  "Assign the .bytes to 'Startup Data' to load it as the starting terrain.");
+    }
+
+    /// <summary>
+    /// Write the tool's current terrain material to <paramref name="path"/> and assign it as the
+    /// tool's chunk material. Overwrites an existing material asset in place (so prefabs/scenes
+    /// keep their reference) rather than creating a duplicate.
+    /// </summary>
+    static void SaveMaterialAtPath(TerrainTool tool, string path)
+    {
+        Shader shader = Shader.Find("Onepen/TerrainSplat");
+        if (shader == null)
+        {
+            Debug.LogError("[TerrainTool] 'Onepen/TerrainSplat' shader not found; can't save a terrain material.");
+            return;
+        }
+
+        // Snapshot the current material (texture array, tiling, etc.) so edits are persisted.
+        Material mat = tool.chunkMaterial != null ? new Material(tool.chunkMaterial) : new Material(shader);
+
+        var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (existing != null)
+        {
+            // Keep the existing asset's identity; just copy the fresh settings onto it.
+            EditorUtility.CopySerialized(mat, existing);
+            Object.DestroyImmediate(mat);
+            mat = existing;
+        }
+        else
+        {
+            AssetDatabase.CreateAsset(mat, path);
+        }
+        AssetDatabase.SaveAssets();
+
+        var so = new SerializedObject(tool);
+        so.FindProperty("chunkMaterial").objectReferenceValue = mat;
+        so.ApplyModifiedProperties();
+
+        tool.EnsureInitialized(); // rebind the texture array + tiling onto the saved material
     }
 }
