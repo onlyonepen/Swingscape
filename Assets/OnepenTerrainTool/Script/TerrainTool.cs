@@ -580,6 +580,13 @@ public class TerrainTool : MonoBehaviour
         // Blend once from the shared current value, then SET it on every owner — same reasoning as
         // StampWorldSample: blending per-owner diverges the shared border splats and seams the paint.
         MatSplat splat = CurrentSharedMaterial(ws);
+        // An unpainted sample (notably the AIR sample just above a flat surface, which every
+        // marching-cubes vertex on that surface interpolates toward) carries no base layer, so a
+        // partial paint would read as PURE painted texture and the rim taper would collapse into a
+        // hard edge. Seed the base layer first — matching FillSlab/StampWorldSample's convention for
+        // solid samples — so a partial paint blends against slice 0 instead.
+        if (splat.IsEmpty)
+            splat = MatSplat.Single(0);
         MatSplat.Paint(ref splat, material, target, rate);
 
         foreach (var owner in _ownersSnapshot)
@@ -718,14 +725,25 @@ public class TerrainTool : MonoBehaviour
 
     void GenerateInitialTerrain()
     {
+        Vector3Int origin = OriginChunk();
         for (int cx = 0; cx < initialChunks.x; cx++)
         for (int cy = 0; cy < initialChunks.y; cy++)
         for (int cz = 0; cz < initialChunks.z; cz++)
         {
-            TerrainChunk chunk = GetOrCreateChunk(new Vector3Int(cx, cy, cz));
+            TerrainChunk chunk = GetOrCreateChunk(new Vector3Int(cx, cy, cz) + origin);
             FillSlab(chunk);
         }
     }
+
+    /// <summary>
+    /// Minimum chunk coordinate of the initial block, chosen so the generated region
+    /// straddles the object's local origin (0,0,0) instead of growing into the +,+,+
+    /// octant. For an even chunk count on an axis the region is centred exactly on 0;
+    /// for an odd count it's off by half a chunk, which <see cref="FillSlab"/> accounts
+    /// for by centring the slab on the region's true centre.
+    /// </summary>
+    Vector3Int OriginChunk() =>
+        new Vector3Int(-initialChunks.x / 2, -initialChunks.y / 2, -initialChunks.z / 2);
 
     /// <summary>
     /// Fill a chunk with a thin, fully closed slab (a box signed-distance field).
@@ -741,7 +759,10 @@ public class TerrainTool : MonoBehaviour
         // the fixed per-chunk footprint (base chunkSize/cellSize) — every chunk covers the same
         // world-space area regardless of its own Lod, only its internal sample count varies.
         Vector3 regionSize = (Vector3)(initialChunks * grid.ChunkSize) * baseCellSize;
-        Vector3 center = regionSize * 0.5f;
+        // The region no longer starts at the origin — it's shifted by OriginChunk so it straddles
+        // (0,0,0). Centre the slab on the region's actual middle (≈ origin) rather than regionSize/2.
+        Vector3 minCorner = (Vector3)(OriginChunk() * grid.ChunkSize) * baseCellSize;
+        Vector3 center = minCorner + regionSize * 0.5f;
 
         // Box half-extents: wide in X/Z (minus the margin), thin in Y. Each axis is clamped so
         // there's always at least one air cell between the slab and the region edge — that gap is

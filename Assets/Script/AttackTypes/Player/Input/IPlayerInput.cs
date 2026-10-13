@@ -44,4 +44,6 @@ public interface IPlayerInput
 
     // --- Meta ---
     bool RespawnPressed { get; }
+    bool PausePressed { get; }
+    bool OutOfBoundsRespawnPressed { get; }
 }

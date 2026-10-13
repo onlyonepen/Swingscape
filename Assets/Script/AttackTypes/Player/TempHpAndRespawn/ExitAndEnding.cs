@@ -21,7 +21,6 @@ public class ExitAndEnding : MonoBehaviour
     {
         if (isWin && Input.anyKeyDown)
         {
-            GameValue.CurrentFloor = 1;
             GameValue.ObtainedGrapple = false;
             SceneManager.LoadScene("MainMenu");
         }

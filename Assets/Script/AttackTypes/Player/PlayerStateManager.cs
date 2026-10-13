@@ -1,7 +1,6 @@
 using DG.Tweening;
 using Script.Player.States;
 using UnityEngine;
-using UnityEngine.UI;
 using VInspector;
 
 public class PlayerStateManager : MonoBehaviour
@@ -40,7 +39,7 @@ public class PlayerStateManager : MonoBehaviour
     public LineRenderer GrappleLr;
 
     [Header("Grapple Unlock")]
-    [Tooltip("Whether the player has the grapple hook when the scene starts. Overridden at runtime by CheckpointManager/ObtainGrapple based on GameValue.ObtainedGrapple.")]
+    [Tooltip("Whether the player has the grapple hook when the scene starts. Synced from GameValue.ObtainedGrapple in Start() — only matters as an inspector override before the player has ever obtained it (e.g. test scenes).")]
     public bool canGrapple = true;
 
     // Wall jump coyote time — refreshed every frame WallRunningState is actually touching a wall,
@@ -55,10 +54,8 @@ public class PlayerStateManager : MonoBehaviour
     public bool CanWallRun => wallRunLockoutTimer <= 0f;
 
     [Header("DiedState")]
-    public Image redScreenOverlay;
     public float deathDuration = 1f;
-    public GameObject gameOverScreen;
-    
+
     #region states
 
     public PlayerState CurrentState;
@@ -96,6 +93,8 @@ public class PlayerStateManager : MonoBehaviour
         currentFov = cameraStats.minFov;
         initialHandPos = GrappleArm.localPosition;
         initialHandRot = GrappleArm.localRotation;
+
+        if (GameValue.ObtainedGrapple) canGrapple = true;
 
         CurrentState = BaseState;
         CurrentState.OnStateEnter(this);
@@ -136,6 +135,16 @@ public class PlayerStateManager : MonoBehaviour
         CurrentState.OnStateExit();
         CurrentState = state;
         CurrentState.OnStateEnter(this);
+    }
+
+    /// <summary>Repositions the player and clears momentum — the one correct way to
+    /// relocate the player (death respawn, out-of-bounds respawn, ...).</summary>
+    public void TeleportTo(Vector3 position, Quaternion rotation)
+    {
+        rb.position = position;
+        rb.rotation = rotation;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
     private void OnTriggerEnter(Collider other)
     {

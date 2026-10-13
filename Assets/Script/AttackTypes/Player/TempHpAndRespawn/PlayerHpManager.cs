@@ -76,6 +76,14 @@ public class PlayerHpManager : MonoBehaviour
         OnDied?.Invoke();
     }
 
+    /// <summary>Called on respawn (death or out-of-bounds) to reset HP and clear the dead flag.</summary>
+    public void Revive()
+    {
+        IsDead = false;
+        CurrentHp = stats.maxHp;
+        RefreshHp();
+    }
+
     private void RefreshHp()
     {
         for (int i = 0; i < hpList.Count; i++)

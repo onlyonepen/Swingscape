@@ -696,18 +696,18 @@ public class TerrainSculptTool : EditorTool
         s.applyMode = (TerrainSculptSettings.ApplyMode)EditorGUILayout.EnumPopup(
             new GUIContent("Apply", "OnRelease: preview the path, apply on release.  OnMove: apply as you drag.  WhileHeld: apply continuously while held."),
             s.applyMode);
-        s.radius = EditorGUILayout.Slider(new GUIContent("Brush Size", "World radius of the brush."), s.radius, 0.1f, 50f);
+        s.radius = EditorGUILayout.Slider(new GUIContent("Brush Size", "World radius of the brush."), s.radius, 0.1f, 10f);
 
         if (s.mode == TerrainTool.BrushMode.Paint)
         {
-            s.paintStrength = EditorGUILayout.Slider(new GUIContent("Opacity", "How fast the texture builds toward full weight."), s.paintStrength, 0.1f, 20f);
+            s.paintStrength = EditorGUILayout.Slider(new GUIContent("Opacity", "How fast the texture builds toward full weight."), s.paintStrength, 0.1f, 5f);
             s.paintEdgeBlend = EditorGUILayout.Slider(new GUIContent("Edge Blend", "Fraction of the rim that cross-fades into surrounding textures."), s.paintEdgeBlend, 0f, 1f);
             EditorGUILayout.Space(4);
             DrawTexturePalette(tool, allowTextureEdit);
         }
         else
         {
-            s.strength = EditorGUILayout.Slider(new GUIContent("Opacity", "How strongly each dab raises/lowers the surface."), s.strength, 0.1f, 50f);
+            s.strength = EditorGUILayout.Slider(new GUIContent("Opacity", "How strongly each dab raises/lowers the surface."), s.strength, 0.01f, 10f);
             EditorGUILayout.LabelField("LMB build · Shift+LMB carve", EditorStyles.miniLabel);
         }
 
