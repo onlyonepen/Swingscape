@@ -1155,6 +1155,7 @@ public class TerrainTool : MonoBehaviour
         lod = Mathf.Clamp(lod < 0 ? defaultLod : lod, 0, maxLod);
 
         var go = new GameObject($"Chunk_{coord.x}_{coord.y}_{coord.z}");
+        go.layer = gameObject.layer;
         // In edit mode the terrain is presented as a single object: the chunks still carry
         // the meshes/colliders that sculpting and rendering need, but they're hidden from the
         // hierarchy (and kept out of the saved scene, since their density isn't serialized —

@@ -1,13 +1,13 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// Wires a Player instance into a scene the same way TestLevel.unity does: makes sure the
-/// Utils (GlobalReference) and GameUI prefabs exist in the scene, then connects the
-/// cross-object references that normally have to be dragged in by hand (HUD canvas,
-/// prediction reticle, death/game-over screens, HP + invulnerability overlays, GlobalReference.player).
+/// Utils (GlobalReference) and GameUI prefabs exist in the scene (adding a GameUIManager to
+/// GameUI if it's missing, since that component self-wires its own overlay references), then
+/// connects the cross-object references that still have to be dragged in by hand (HUD canvas,
+/// prediction reticle, HP + invulnerability overlays, GlobalReference.player).
 /// </summary>
 public static class PlayerSceneSetup
 {
@@ -53,21 +53,26 @@ public static class PlayerSceneSetup
 
         if (gameUI != null)
         {
+            if (gameUI.GetComponent<GameUIManager>() == null)
+            {
+                Undo.AddComponent<GameUIManager>(gameUI);
+            }
+
             Canvas canvas = gameUI.GetComponent<Canvas>();
             Transform autoAim = gameUI.transform.Find("AutoAim");
-            Transform gameOverScreen = gameUI.transform.Find("GameOverScreen");
-            Transform redScreenOverlay = gameUI.transform.Find("RedScreenOverlay");
             Transform hpContainer = gameUI.transform.Find("HPContainer");
             Transform boostOverlay = gameUI.transform.Find("BoostOverlay");
 
+            if (gameUI.transform.Find("OOBRespawnPrompt") == null)
+            {
+                Debug.LogWarning("Setup Player Scene: GameUI prefab has no 'OOBRespawnPrompt' child yet; GameUIManager.oobRespawnPrompt will stay unassigned.");
+            }
+
             GrappleTargeting targeting = player.GetComponentInChildren<GrappleTargeting>(true);
-            PlayerStateManager stateManager = player.GetComponentInChildren<PlayerStateManager>(true);
             PlayerHpManager hpManager = player.GetComponentInChildren<PlayerHpManager>(true);
 
             SetRef(targeting, "targetCanvas", canvas);
             SetRef(targeting, "predictionPoint", autoAim != null ? autoAim.GetComponent<RectTransform>() : null);
-            SetRef(stateManager, "gameOverScreen", gameOverScreen != null ? gameOverScreen.gameObject : null);
-            SetRef(stateManager, "redScreenOverlay", redScreenOverlay != null ? redScreenOverlay.GetComponent<Image>() : null);
             SetRef(hpManager, "HpContainer", hpContainer != null ? hpContainer.gameObject : null);
             SetRef(hpManager, "InvulnerabilityEfffect", boostOverlay != null ? boostOverlay.gameObject : null);
         }
