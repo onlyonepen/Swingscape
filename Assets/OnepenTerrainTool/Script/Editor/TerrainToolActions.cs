@@ -17,6 +17,7 @@ public static class TerrainToolActions
     static bool _setupFoldout = true;
     static bool _configFoldout;
     static bool _exportFoldout;
+    static bool _cleanupFoldout = true;
 
     /// <summary>
     /// Draw the full edit-mode control panel (scene-editing toggle, brush, textures, setup,
@@ -35,9 +36,42 @@ public static class TerrainToolActions
         TerrainSculptTool.DrawBrushSettings(tool, allowTextureEdit: true); // mode toolbar + brush + texture palette, shared with the overlay
 
         EditorGUILayout.Space(8);
+        DrawCleanupFoldout(tool);
         DrawSetupFoldout(tool);
         DrawConfigFoldout(tool);
         DrawExportFoldout(tool);
+    }
+
+    /// <summary>
+    /// One-click cleanup of sculpting junk: remove small disconnected solid blobs and fill
+    /// small fully-enclosed air pockets. A connected-components pass — clusters up to the chosen
+    /// size are affected; the bulk terrain and large caverns are left alone.
+    /// </summary>
+    static void DrawCleanupFoldout(TerrainTool tool)
+    {
+        _cleanupFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(_cleanupFoldout, "Cleanup");
+        if (_cleanupFoldout)
+        {
+            TerrainSculptSettings s = TerrainSculptSettings.instance;
+            EditorGUI.BeginChangeCheck();
+            s.cleanupMaxVoxels = EditorGUILayout.IntSlider(
+                new GUIContent("Max Cluster Size", "Solid blobs and air pockets of at most this many voxels are removed / filled. Bigger structures are kept."),
+                s.cleanupMaxVoxels, 1, 4096);
+            s.cleanupRemoveDebris = EditorGUILayout.ToggleLeft(
+                new GUIContent("Remove Small Debris", "Delete disconnected solid blobs smaller than the max cluster size."), s.cleanupRemoveDebris);
+            s.cleanupFillHoles = EditorGUILayout.ToggleLeft(
+                new GUIContent("Fill Small Holes", "Fill fully-enclosed air pockets smaller than the max cluster size."), s.cleanupFillHoles);
+            if (EditorGUI.EndChangeCheck())
+                s.Persist();
+
+            using (new EditorGUI.DisabledScope(Application.isPlaying || (!s.cleanupRemoveDebris && !s.cleanupFillHoles)))
+            {
+                if (GUILayout.Button("Clean Up (remove debris · fill holes)", GUILayout.Height(24)))
+                    TerrainSculptTool.CleanUpTerrain(tool);
+            }
+            EditorGUILayout.LabelField("Sweeps the whole terrain. Undoable while editing in the Scene.", EditorStyles.miniLabel);
+        }
+        EditorGUILayout.EndFoldoutHeaderGroup();
     }
 
     /// <summary>The prominent "edit in the scene view" toggle — the equivalent of selecting a Unity terrain tool.</summary>
@@ -118,9 +152,46 @@ public static class TerrainToolActions
                     tool.ClearChunks();
                     SceneView.RepaintAll();
                 }
+
+                EditorGUILayout.Space(4);
+                if (GUILayout.Button(new GUIContent("Apply Transform (bake scale → cell size)",
+                        "Multiply the cell size by the largest Transform scale axis and reset the object's scale to " +
+                        "(1,1,1). The terrain keeps its on-screen size; the scale is baked into the voxel data.")))
+                    ApplyTransform(tool);
             }
         }
         EditorGUILayout.EndFoldoutHeaderGroup();
+    }
+
+    /// <summary>
+    /// Bake the terrain GameObject's scale into the voxel cell size: multiply the cell size by the
+    /// largest scale axis (the voxel grid is uniform, so one factor is used for all axes), reset the
+    /// object's scale to (1,1,1), and reposition/remesh the existing chunks so the on-screen size is
+    /// unchanged. The sculpted data is kept — only the stored world spacing changes.
+    /// </summary>
+    static void ApplyTransform(TerrainTool tool)
+    {
+        Transform t = tool.transform;
+        Vector3 scale = t.localScale;
+        float f = Mathf.Max(scale.x, Mathf.Max(scale.y, scale.z));
+        if (f <= 0f)
+        {
+            Debug.LogWarning("[TerrainTool] Apply Transform skipped: the largest scale axis must be positive.");
+            return;
+        }
+
+        TerrainSculptSettings s = TerrainSculptSettings.instance;
+        s.cellSize *= f;
+        s.Persist();
+
+        s.PushTo(tool);             // adopt the new cell size (rebuilds the grid + material)
+        tool.ReapplyGridToChunks(); // keep the sculpted data; just reposition/remesh at the new spacing
+
+        Undo.RecordObject(t, "Apply Terrain Transform");
+        t.localScale = Vector3.one;
+
+        SceneView.RepaintAll();
+        Debug.Log($"[TerrainTool] Applied transform: cell size ×{f} → {s.cellSize:0.####}, scale reset to (1,1,1).");
     }
 
     /// <summary>

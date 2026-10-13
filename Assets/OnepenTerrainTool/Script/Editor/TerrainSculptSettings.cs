@@ -34,15 +34,23 @@ public class TerrainSculptSettings : ScriptableSingleton<TerrainSculptSettings>
     }
 
     public ApplyMode applyMode = ApplyMode.OnRelease;
-    public TerrainTool.BrushMode mode = TerrainTool.BrushMode.Sculpt;
+    public TerrainTool.BrushMode mode = TerrainTool.BrushMode.Build;
     public float radius = 2f;
     public float strength = 8f;
+    public float smoothStrength = 3f; // per-dab blur fraction for the Smooth brush
     public int selectedMaterial = 0;
     public float paintStrength = 4f;
     public float paintEdgeBlend = 0.3f;
 
     /// <summary>Show the in-scene brush settings box while the sculpt tool is active.</summary>
     public bool showSceneOverlay = true;
+
+    // ---- Cleanup ----
+    // One-click removal of sculpting junk: small disconnected solid blobs (debris) and
+    // small fully-enclosed air pockets (holes). Clusters up to this many voxels are affected.
+    public int cleanupMaxVoxels = 64;
+    public bool cleanupRemoveDebris = true;
+    public bool cleanupFillHoles = true;
 
     // ---- Auto-save ----
     // The edit-mode terrain is a transient session (chunk density isn't serialized in the

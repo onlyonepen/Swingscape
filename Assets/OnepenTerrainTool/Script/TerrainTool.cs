@@ -82,8 +82,8 @@ public class TerrainTool : MonoBehaviour
              "In the editor the terrain stays a single object; the split only happens in Play. Turn off to drive generation yourself.")]
     public bool buildAtRuntime = true;
 
-    /// <summary>Sculpt reshapes the terrain (density); Paint blends a texture onto it (material) without changing shape.</summary>
-    public enum BrushMode { Sculpt, Paint }
+    /// <summary>Build raises/adds solid and Carve lowers/removes it (both reshape the density field); Paint blends a texture onto the surface (material) without changing its shape; Smooth relaxes the density field (rounds off bumps/jaggies) without adding bulk.</summary>
+    public enum BrushMode { Build, Carve, Smooth, Paint }
 
     /// <summary>Upper bound on base chunk size, so a single chunk can't ask for an absurd amount of memory.</summary>
     const int MaxChunkSize = 128;
@@ -452,6 +452,83 @@ public class TerrainTool : MonoBehaviour
     }
 
     /// <summary>
+    /// Relax the surface under the brush by pulling every density sample toward the
+    /// local average of its 3×3×3 neighbourhood — a box blur of the signed field,
+    /// which rounds off sharp ridges and fills jagged pits WITHOUT adding or removing
+    /// bulk material. Like <see cref="Sculpt"/> it first refines every reachable chunk —
+    /// expanded by a one-sample skirt so the blur's neighbour taps around the rim are
+    /// full resolution too — to <paramref name="targetCellSize"/> (never auto-coarsened).
+    /// <paramref name="strength"/> is the per-dab fraction (0..1) each sample moves toward
+    /// its neighbourhood average, scaled by a radial falloff so the brush feathers at its
+    /// rim. A non-positive radius or strength is a no-op.
+    /// </summary>
+    public void Smooth(Vector3 worldPoint, float strength, float radius, float targetCellSize)
+    {
+        if (radius <= 0f)
+            return;
+        float rate = Mathf.Clamp01(strength);
+        if (rate <= 0f)
+            return;
+
+        int targetLod = _grid.LodForCellSize(targetCellSize);
+
+        Vector3 center = transform.InverseTransformPoint(worldPoint) / _grid.CellSize;
+        float r = radius / _grid.CellSize;
+        int ri = Mathf.CeilToInt(r);
+
+        int cx = Mathf.RoundToInt(center.x);
+        int cy = Mathf.RoundToInt(center.y);
+        int cz = Mathf.RoundToInt(center.z);
+
+        // Pass 1: refine every chunk the brush can reach — expanded by one sample so the
+        // blur's neighbour taps around the rim are stored at full resolution too.
+        var touchedChunks = new HashSet<Vector3Int>();
+        for (int x = cx - ri - 1; x <= cx + ri + 1; x++)
+        for (int y = cy - ri - 1; y <= cy + ri + 1; y++)
+        for (int z = cz - ri - 1; z <= cz + ri + 1; z++)
+        {
+            if (Vector3.Distance(new Vector3(x, y, z), center) > r + 1f)
+                continue;
+
+            touchedChunks.Add(new Vector3Int(
+                Mathf.FloorToInt((float)x / chunkSize),
+                Mathf.FloorToInt((float)y / chunkSize),
+                Mathf.FloorToInt((float)z / chunkSize)));
+        }
+        foreach (Vector3Int coord in touchedChunks)
+            EnsureLod(coord, targetLod);
+
+        // Pass 2: compute every blurred target from the PRE-smooth field first, so the blur
+        // reads original neighbour values (not ones already half-smoothed this dab), THEN apply.
+        var blurred = new Dictionary<Vector3Int, float>();
+        for (int x = cx - ri; x <= cx + ri; x++)
+        for (int y = cy - ri; y <= cy + ri; y++)
+        for (int z = cz - ri; z <= cz + ri; z++)
+        {
+            float dist = Vector3.Distance(new Vector3(x, y, z), center);
+            if (dist > r)
+                continue;
+
+            float sum = 0f;
+            for (int ox = -1; ox <= 1; ox++)
+            for (int oy = -1; oy <= 1; oy++)
+            for (int oz = -1; oz <= 1; oz++)
+                sum += SampleDensityOrAir(new Vector3Int(x + ox, y + oy, z + oz));
+            float avg = sum / 27f; // uniform 3×3×3 box blur of the signed field
+
+            var ws = new Vector3Int(x, y, z);
+            float falloff = 1f - dist / r;                       // feather toward the rim
+            float current = SampleDensityOrAir(ws);
+            blurred[ws] = Mathf.Lerp(current, avg, rate * falloff);
+        }
+
+        foreach (KeyValuePair<Vector3Int, float> kv in blurred)
+            SetWorldSample(kv.Key, kv.Value);
+
+        RebuildDirty();
+    }
+
+    /// <summary>
     /// Paint a material onto the terrain without changing its shape. The brush has a
     /// solid core (the material is driven to full weight) and only a tapered rim band
     /// — the outer <paramref name="edgeBlend"/> fraction of the radius — settles at a
@@ -566,6 +643,278 @@ public class TerrainTool : MonoBehaviour
     }
 
     /// <summary>
+    /// Overwrite a world sample's density with an explicit value in every chunk that
+    /// stores it (1, 2, 4 or 8 along shared borders), mirroring <see cref="StampWorldSample"/>'s
+    /// multi-owner write so shared border samples stay identical. Used by <see cref="Smooth"/>
+    /// and <see cref="CleanUp"/>, which compute the new value themselves rather than CSG-stamping
+    /// a shape. A sample pushed below the iso level with no material yet gets the base layer, so
+    /// newly-solid ground renders textured instead of blank.
+    /// </summary>
+    void SetWorldSample(Vector3Int ws, float value)
+    {
+        SampleOwners(ws);
+        _ownersSnapshot.Clear();
+        _ownersSnapshot.AddRange(_owners); // iterate a copy: GetOrCreateChunk below can refill _owners reentrantly
+
+        foreach (var owner in _ownersSnapshot)
+        {
+            TerrainChunk chunk = GetOrCreateChunk(owner.Key);
+            if (!_grid.TryLocalIndex(chunk.Lod, owner.Value, out Vector3Int local))
+                continue;
+
+            FireBeforeEdit(owner.Key);
+            chunk.Density[local.x, local.y, local.z] = value;
+            if (value < _grid.IsoLevel && chunk.Material[local.x, local.y, local.z].IsEmpty)
+                chunk.Material[local.x, local.y, local.z] = MatSplat.Single(0);
+            _dirty.Add(owner.Key);
+        }
+    }
+
+    /// <summary>The density of a world sample from any existing owner that stores it, or air if none do (used by the smooth brush's neighbourhood reads). Standalone — it runs its own owner lookup rather than relying on a prior <see cref="SampleOwners"/>.</summary>
+    float SampleDensityOrAir(Vector3Int ws)
+    {
+        SampleOwners(ws);
+        foreach (var owner in _owners)
+            if (_chunks.TryGetValue(owner.Key, out TerrainChunk c) &&
+                _grid.TryLocalIndex(c.Lod, owner.Value, out Vector3Int li))
+                return c.Density[li.x, li.y, li.z];
+        return _grid.AirDensity;
+    }
+
+    // ---- Automatic cleanup -------------------------------------------------
+
+    /// <summary>Guard: refuse to scan an absurdly large bounding box (keeps a one-click cleanup from allocating gigabytes / hanging).</summary>
+    const long MaxCleanupSamples = 64_000_000L;
+
+    /// <summary>
+    /// One-click cleanup of sculpting junk: delete small DISCONNECTED solid blobs
+    /// (<paramref name="removeDebris"/>) and fill small FULLY-ENCLOSED air pockets
+    /// (<paramref name="fillHoles"/>). A connected-components pass over the base
+    /// world-sample lattice: any solid cluster of at most <paramref name="maxClusterVoxels"/>
+    /// samples that isn't joined to the bulk terrain is cleared to air, and any enclosed
+    /// air cluster of at most that size (one not reachable from outside the terrain) is
+    /// filled solid. Larger structures — the terrain itself, intentional caverns — are
+    /// untouched because they exceed the threshold. Editor chunks are stored at full
+    /// resolution (Lod 0), so every integer sample in the terrain's footprint is present
+    /// and the lattice reads consistently. Returns the number of samples changed.
+    /// </summary>
+    public int CleanUp(int maxClusterVoxels, bool removeDebris, bool fillHoles)
+    {
+        if (_chunks.Count == 0 || maxClusterVoxels <= 0 || (!removeDebris && !fillHoles))
+            return 0;
+
+        // Bounding box of every stored sample, in base/Lod-0 world-sample coordinates.
+        var minC = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
+        var maxC = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
+        foreach (Vector3Int c in _chunks.Keys)
+        {
+            minC = Vector3Int.Min(minC, c);
+            maxC = Vector3Int.Max(maxC, c);
+        }
+        Vector3Int lo = minC * chunkSize;
+        Vector3Int hi = (maxC + Vector3Int.one) * chunkSize; // chunk's samples reach one chunkSize past its origin
+        int nx = hi.x - lo.x + 1, ny = hi.y - lo.y + 1, nz = hi.z - lo.z + 1;
+
+        if ((long)nx * ny * nz > MaxCleanupSamples)
+        {
+            Debug.LogWarning($"[TerrainTool] Clean Up skipped: terrain bounds ({nx}×{ny}×{nz}) are too large to scan.");
+            return 0;
+        }
+
+        // Classify every lattice sample as solid (density < iso) or air. Missing-chunk regions read as air.
+        int n = nx * ny * nz;
+        var solid = new bool[n];
+        for (int x = 0; x < nx; x++)
+        for (int y = 0; y < ny; y++)
+        for (int z = 0; z < nz; z++)
+            solid[Flatten(x, y, z, ny, nz)] =
+                SampleDensityOrAir(new Vector3Int(lo.x + x, lo.y + y, lo.z + z)) < _grid.IsoLevel;
+
+        var toAir = new List<int>();   // solid debris to clear
+        var toSolid = new List<int>(); // enclosed holes to fill
+
+        if (removeDebris)
+            CollectSmallComponents(solid, target: true, nx, ny, nz, maxClusterVoxels, toAir);
+        foreach (int i in toAir)
+            solid[i] = false; // apply to the working field so hole detection sees the post-debris state
+
+        if (fillHoles)
+            CollectSmallEnclosedAir(solid, nx, ny, nz, maxClusterVoxels, toSolid);
+
+        // Write results back through the shared-sample writer so seams stay consistent.
+        foreach (int i in toAir)
+            SetWorldSample(WorldFromFlat(i, lo, ny, nz), _grid.AirDensity);
+
+        float fill = _grid.IsoLevel - _grid.CellSize; // firmly inside, so the pocket's inner surface disappears
+        foreach (int i in toSolid)
+            SetWorldSample(WorldFromFlat(i, lo, ny, nz), fill);
+
+        RebuildDirty();
+        return toAir.Count + toSolid.Count;
+    }
+
+    static int Flatten(int x, int y, int z, int ny, int nz) => (x * ny + y) * nz + z;
+
+    static Vector3Int WorldFromFlat(int i, Vector3Int lo, int ny, int nz)
+    {
+        int z = i % nz;
+        int y = (i / nz) % ny;
+        int x = i / (nz * ny);
+        return new Vector3Int(lo.x + x, lo.y + y, lo.z + z);
+    }
+
+    /// <summary>
+    /// 6-connected flood fill over <paramref name="field"/>: every connected component of cells
+    /// equal to <paramref name="target"/> whose size is at most <paramref name="maxSize"/> has its
+    /// indices appended to <paramref name="small"/>. The bulk terrain (one huge component) exceeds
+    /// the threshold and is skipped, so only stray blobs are collected.
+    /// </summary>
+    static void CollectSmallComponents(bool[] field, bool target, int nx, int ny, int nz, int maxSize, List<int> small)
+    {
+        var visited = new bool[field.Length];
+        var stack = new Stack<int>();
+        var comp = new List<int>();
+
+        for (int i = 0; i < field.Length; i++)
+        {
+            if (visited[i] || field[i] != target)
+                continue;
+
+            comp.Clear();
+            stack.Push(i);
+            visited[i] = true;
+            while (stack.Count > 0)
+            {
+                int cur = stack.Pop();
+                comp.Add(cur);
+                int z = cur % nz, y = (cur / nz) % ny, x = cur / (nz * ny);
+                PushNeighbors(field, visited, stack, target, x, y, z, nx, ny, nz);
+            }
+
+            if (comp.Count <= maxSize)
+                small.AddRange(comp);
+        }
+    }
+
+    /// <summary>
+    /// Find small enclosed air pockets in <paramref name="solid"/>: flood "open" air inward from the
+    /// bounding-box faces, then any air component not reached (fully walled in by solid) whose size is
+    /// at most <paramref name="maxSize"/> is appended to <paramref name="fill"/>. Large enclosed
+    /// caverns exceed the threshold and are preserved.
+    /// </summary>
+    static void CollectSmallEnclosedAir(bool[] solid, int nx, int ny, int nz, int maxSize, List<int> fill)
+    {
+        var open = new bool[solid.Length]; // air connected to the outside
+        var stack = new Stack<int>();
+
+        // Seed from every air cell on the six faces of the box.
+        for (int x = 0; x < nx; x++)
+        for (int y = 0; y < ny; y++)
+        for (int z = 0; z < nz; z++)
+        {
+            if (x != 0 && x != nx - 1 && y != 0 && y != ny - 1 && z != 0 && z != nz - 1)
+                continue;
+            int i = Flatten(x, y, z, ny, nz);
+            if (!solid[i] && !open[i])
+            {
+                open[i] = true;
+                stack.Push(i);
+            }
+        }
+        while (stack.Count > 0)
+        {
+            int cur = stack.Pop();
+            int z = cur % nz, y = (cur / nz) % ny, x = cur / (nz * ny);
+            PushOpenAir(solid, open, stack, x, y, z, nx, ny, nz);
+        }
+
+        // Enclosed air = not solid and not open. Collect small components of it.
+        var visited = new bool[solid.Length];
+        var comp = new List<int>();
+        for (int i = 0; i < solid.Length; i++)
+        {
+            if (solid[i] || open[i] || visited[i])
+                continue;
+
+            comp.Clear();
+            stack.Push(i);
+            visited[i] = true;
+            while (stack.Count > 0)
+            {
+                int cur = stack.Pop();
+                comp.Add(cur);
+                int z = cur % nz, y = (cur / nz) % ny, x = cur / (nz * ny);
+                PushEnclosedAir(solid, open, visited, stack, x, y, z, nx, ny, nz);
+            }
+
+            if (comp.Count <= maxSize)
+                fill.AddRange(comp);
+        }
+    }
+
+    // ---- 6-neighbour expansion helpers (shared by the flood fills) ----
+
+    static void PushNeighbors(bool[] field, bool[] visited, Stack<int> stack, bool target, int x, int y, int z, int nx, int ny, int nz)
+    {
+        if (x > 0)      TryVisit(field, visited, stack, target, x - 1, y, z, ny, nz);
+        if (x < nx - 1) TryVisit(field, visited, stack, target, x + 1, y, z, ny, nz);
+        if (y > 0)      TryVisit(field, visited, stack, target, x, y - 1, z, ny, nz);
+        if (y < ny - 1) TryVisit(field, visited, stack, target, x, y + 1, z, ny, nz);
+        if (z > 0)      TryVisit(field, visited, stack, target, x, y, z - 1, ny, nz);
+        if (z < nz - 1) TryVisit(field, visited, stack, target, x, y, z + 1, ny, nz);
+    }
+
+    static void TryVisit(bool[] field, bool[] visited, Stack<int> stack, bool target, int x, int y, int z, int ny, int nz)
+    {
+        int i = Flatten(x, y, z, ny, nz);
+        if (!visited[i] && field[i] == target)
+        {
+            visited[i] = true;
+            stack.Push(i);
+        }
+    }
+
+    static void PushOpenAir(bool[] solid, bool[] open, Stack<int> stack, int x, int y, int z, int nx, int ny, int nz)
+    {
+        if (x > 0)      TryOpen(solid, open, stack, x - 1, y, z, ny, nz);
+        if (x < nx - 1) TryOpen(solid, open, stack, x + 1, y, z, ny, nz);
+        if (y > 0)      TryOpen(solid, open, stack, x, y - 1, z, ny, nz);
+        if (y < ny - 1) TryOpen(solid, open, stack, x, y + 1, z, ny, nz);
+        if (z > 0)      TryOpen(solid, open, stack, x, y, z - 1, ny, nz);
+        if (z < nz - 1) TryOpen(solid, open, stack, x, y, z + 1, ny, nz);
+    }
+
+    static void TryOpen(bool[] solid, bool[] open, Stack<int> stack, int x, int y, int z, int ny, int nz)
+    {
+        int i = Flatten(x, y, z, ny, nz);
+        if (!solid[i] && !open[i])
+        {
+            open[i] = true;
+            stack.Push(i);
+        }
+    }
+
+    static void PushEnclosedAir(bool[] solid, bool[] open, bool[] visited, Stack<int> stack, int x, int y, int z, int nx, int ny, int nz)
+    {
+        if (x > 0)      TryEnclosed(solid, open, visited, stack, x - 1, y, z, ny, nz);
+        if (x < nx - 1) TryEnclosed(solid, open, visited, stack, x + 1, y, z, ny, nz);
+        if (y > 0)      TryEnclosed(solid, open, visited, stack, x, y - 1, z, ny, nz);
+        if (y < ny - 1) TryEnclosed(solid, open, visited, stack, x, y + 1, z, ny, nz);
+        if (z > 0)      TryEnclosed(solid, open, visited, stack, x, y, z - 1, ny, nz);
+        if (z < nz - 1) TryEnclosed(solid, open, visited, stack, x, y, z + 1, ny, nz);
+    }
+
+    static void TryEnclosed(bool[] solid, bool[] open, bool[] visited, Stack<int> stack, int x, int y, int z, int ny, int nz)
+    {
+        int i = Flatten(x, y, z, ny, nz);
+        if (!solid[i] && !open[i] && !visited[i])
+        {
+            visited[i] = true;
+            stack.Push(i);
+        }
+    }
+
+    /// <summary>
     /// Blend a material into a world sample in every chunk that stores it, mirroring
     /// <see cref="StampWorldSample"/> so shared border samples stay equal (each copy
     /// gets the same paint delta). Coarser candidate owners that don't store this
@@ -626,6 +975,25 @@ public class TerrainTool : MonoBehaviour
     {
         foreach (TerrainChunk chunk in _chunks.Values)
             chunk.Rebuild(_grid, smoothShading);
+    }
+
+    /// <summary>
+    /// Reposition and remesh every existing chunk against the current <see cref="Grid"/> WITHOUT
+    /// regenerating or resampling: the stored density/material arrays are kept as-is, only each
+    /// chunk's local position and world sample spacing are restamped from the (possibly changed)
+    /// grid. Used after a cell-size change — e.g. "Apply Transform" baking a GameObject scale into
+    /// the terrain — so the already-sculpted terrain adopts the new world spacing losslessly.
+    /// </summary>
+    public void ReapplyGridToChunks()
+    {
+        foreach (KeyValuePair<Vector3Int, TerrainChunk> kv in _chunks)
+        {
+            TerrainChunk chunk = kv.Value;
+            chunk.transform.localPosition = _grid.ChunkLocalPosition(kv.Key);
+            // Same samples/Lod — just restamp this chunk's world spacing for its Lod.
+            chunk.ApplyResampled(chunk.Density, chunk.Material, chunk.Lod, chunk.ChunkSize, _grid.SpacingAtLod(chunk.Lod));
+        }
+        RebuildAll();
     }
 
     // ---- Editor support (edit-mode sculpting) ------------------------------
@@ -1155,7 +1523,6 @@ public class TerrainTool : MonoBehaviour
         lod = Mathf.Clamp(lod < 0 ? defaultLod : lod, 0, maxLod);
 
         var go = new GameObject($"Chunk_{coord.x}_{coord.y}_{coord.z}");
-        go.layer = gameObject.layer;
         // In edit mode the terrain is presented as a single object: the chunks still carry
         // the meshes/colliders that sculpting and rendering need, but they're hidden from the
         // hierarchy (and kept out of the saved scene, since their density isn't serialized —

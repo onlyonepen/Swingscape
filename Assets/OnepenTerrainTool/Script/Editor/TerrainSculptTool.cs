@@ -67,7 +67,7 @@ public class TerrainSculptTool : EditorTool
     // cache the drawn path (and show a ghost preview along it); the actual sculpt/paint
     // is applied all at once on release, as a single undo step.
     bool _previewing;
-    bool _strokeRemove; // carve (Shift) vs build, captured when the stroke starts
+    bool _strokeRemove; // true in Carve mode (subtract) vs Build (add), captured when the stroke starts
     readonly List<Vector3> _strokePath = new List<Vector3>();
     readonly List<Vector3> _strokeNormals = new List<Vector3>();
 
@@ -82,6 +82,9 @@ public class TerrainSculptTool : EditorTool
 
     TerrainTool Tool => target as TerrainTool;
 
+    /// <summary>The tool instance currently active in the Scene view, if any — lets the shared control panel route an edit (e.g. Clean Up) through it so it's captured as one undo step.</summary>
+    public static TerrainSculptTool ActiveInstance { get; private set; }
+
     public override GUIContent toolbarIcon =>
         _icon ??= new GUIContent(EditorGUIUtility.IconContent("TerrainInspector.TerrainToolSculpt").image,
                                  "Terrain Sculpt — drag over the terrain to sculpt/paint in edit mode");
@@ -92,6 +95,7 @@ public class TerrainSculptTool : EditorTool
         if (tool == null)
             return;
 
+        ActiveInstance = this;
         S.PushTo(tool); // config lives in the settings now — push it in and initialize
 
         // Recompile / scene reload wipes the transient edit-mode chunks. If auto-save kept a
@@ -122,6 +126,48 @@ public class TerrainSculptTool : EditorTool
         EndLiveStroke();  // commit a live stroke that's in progress
         EndStrokeIfAny(); // and don't leave a half-captured apply behind
         FlushAutoSave();  // persist anything still pending before the tool goes away
+
+        if (ActiveInstance == this)
+            ActiveInstance = null;
+    }
+
+    // ---- Auto cleanup (remove small debris, fill small holes) ---------------
+
+    /// <summary>
+    /// Run <see cref="TerrainTool.CleanUp"/> on <paramref name="tool"/>, preferring the Scene-view
+    /// tool instance (so it's captured as one undoable step) and falling back to a direct,
+    /// non-undoable pass when the tool isn't being edited in the Scene. Shared by the control panel.
+    /// </summary>
+    public static void CleanUpTerrain(TerrainTool tool)
+    {
+        if (tool == null)
+            return;
+
+        if (ActiveInstance != null && ActiveInstance.Tool == tool)
+        {
+            ActiveInstance.RunCleanup(); // undoable path
+            return;
+        }
+
+        int changed = tool.CleanUp(S.cleanupMaxVoxels, S.cleanupRemoveDebris, S.cleanupFillHoles);
+        SceneView.RepaintAll();
+        Debug.Log($"[TerrainTool] Clean Up changed {changed} samples. " +
+                  "(Activate “Edit in Scene View” first to make Clean Up undoable.)");
+    }
+
+    /// <summary>Run the cleanup as a single undoable stroke, then repaint and queue an auto-save.</summary>
+    public void RunCleanup()
+    {
+        TerrainTool tool = Tool;
+        if (tool == null)
+            return;
+
+        BeginStroke();
+        int changed = tool.CleanUp(S.cleanupMaxVoxels, S.cleanupRemoveDebris, S.cleanupFillHoles);
+        EndStrokeIfAny(); // commits an undo step only if anything actually changed
+
+        SceneView.RepaintAll();
+        Debug.Log($"[TerrainTool] Clean Up changed {changed} samples.");
     }
 
     static bool HasAnyChunk(TerrainTool tool)
@@ -165,7 +211,7 @@ public class TerrainSculptTool : EditorTool
 
             case EventType.KeyDown when e.keyCode == KeyCode.LeftShift || e.keyCode == KeyCode.RightShift:
             case EventType.KeyUp when e.keyCode == KeyCode.LeftShift || e.keyCode == KeyCode.RightShift:
-                window.Repaint(); // recolor the gizmo (add vs carve) as Shift is held/released
+                window.Repaint(); // recolor the gizmo (build ⇄ carve) as Shift is held/released
                 break;
 
             case EventType.KeyDown when _previewing && e.keyCode == KeyCode.Escape:
@@ -173,15 +219,16 @@ public class TerrainSculptTool : EditorTool
                 e.Use();
                 break;
 
-            // Left-click starts a stroke; Shift+Left-click carves. Right mouse is left
-            // free for scene-view camera navigation. OnRelease caches the drawn path and
-            // commits on release; OnMove / WhileHeld apply live during the hold.
+            // Left-click starts a stroke; the action is the selected brush mode, except Shift
+            // temporarily swaps Build ⇄ Carve. Right mouse is left free for scene-view camera
+            // navigation. OnRelease caches the drawn path and commits on release; OnMove /
+            // WhileHeld apply live during the hold.
             case EventType.MouseDown when e.button == 0 && hasHover && !e.alt
                                           && !_overlayRect.Contains(e.mousePosition):
                 if (S.applyMode == TerrainSculptSettings.ApplyMode.OnRelease)
-                    BeginPreview(point, normal, e.shift);
+                    BeginPreview(point, normal, IsCarveAction(e.shift));
                 else
-                    BeginLiveStroke(controlId, point, e.shift, hasHover);
+                    BeginLiveStroke(controlId, point, IsCarveAction(e.shift), hasHover);
                 e.Use();
                 break;
 
@@ -234,17 +281,30 @@ public class TerrainSculptTool : EditorTool
         return true;
     }
 
-    /// <summary>Brush tint: blue for paint; green = add, red = carve for sculpt.</summary>
-    static Color BrushColor(bool remove)
+    /// <summary>
+    /// Whether the active sculpt action removes material. Carve subtracts, Build adds, and
+    /// holding <paramref name="shift"/> temporarily swaps the two (so you can carve mid-build
+    /// without switching tabs). Smooth/Paint aren't carve actions, so this is always false there.
+    /// </summary>
+    static bool IsCarveAction(bool shift) => S.mode switch
     {
-        if (S.mode == TerrainTool.BrushMode.Paint)
-            return new Color(0.3f, 0.8f, 1f);
-        return remove ? new Color(1f, 0.35f, 0.3f) : new Color(0.3f, 0.9f, 0.4f);
-    }
+        TerrainTool.BrushMode.Carve => !shift, // Shift in Carve temporarily builds
+        TerrainTool.BrushMode.Build => shift,  // Shift in Build temporarily carves
+        _ => false,
+    };
+
+    /// <summary>Brush tint: blue Paint, yellow Smooth, and for the sculpt modes green for the build action / red for the carve action (so Shift's inversion shows).</summary>
+    static Color BrushColor(bool carveAction) => S.mode switch
+    {
+        TerrainTool.BrushMode.Paint => new Color(0.3f, 0.8f, 1f),
+        TerrainTool.BrushMode.Smooth => new Color(1f, 0.85f, 0.3f),
+        _ => carveAction ? new Color(1f, 0.35f, 0.3f) : new Color(0.3f, 0.9f, 0.4f),
+    };
 
     void DrawBrushGizmo(Vector3 point, Vector3 normal)
     {
-        Color c = BrushColor(_previewing || _dragging ? _strokeRemove : Event.current.shift);
+        bool carve = _previewing || _dragging ? _strokeRemove : IsCarveAction(Event.current.shift);
+        Color c = BrushColor(carve);
 
         Handles.color = c;
         Handles.DrawWireDisc(point, normal, S.radius);
@@ -304,7 +364,15 @@ public class TerrainSculptTool : EditorTool
             return;
         }
 
-        float sign = remove ? 1f : -1f; // left-click builds up (lower density = solid); Shift+left-click carves
+        if (S.mode == TerrainTool.BrushMode.Smooth)
+        {
+            tool.Smooth(point, S.smoothStrength * DabStep, S.radius, S.cellSize); // relax only — no build/carve sign
+            return;
+        }
+
+        // Build and Carve both go through Sculpt; the mode (captured as `remove` at stroke start)
+        // picks the sign: Build adds solid (lower density), Carve subtracts it.
+        float sign = remove ? 1f : -1f;
         tool.Sculpt(point, sign * S.strength * DabStep, S.radius, S.cellSize);
     }
 
@@ -464,7 +532,7 @@ public class TerrainSculptTool : EditorTool
         // Record the pre-stroke counter value on the settings object, then bump it; native
         // Ctrl+Z restores the old value and fires OnUndoRedo, which replays the snapshot.
         TerrainSculptSettings s = S;
-        Undo.RegisterCompleteObjectUndo(s, s.mode == TerrainTool.BrushMode.Paint ? "Terrain Paint" : "Terrain Sculpt");
+        Undo.RegisterCompleteObjectUndo(s, UndoLabel(s.mode));
         int version = ++_versionCounter;
         s.editorUndoVersion = version;
         EditorUtility.SetDirty(s);
@@ -475,6 +543,14 @@ public class TerrainSculptTool : EditorTool
 
         ScheduleAutoSave(); // a stroke just changed the terrain — queue a debounced save
     }
+
+    static string UndoLabel(TerrainTool.BrushMode mode) => mode switch
+    {
+        TerrainTool.BrushMode.Paint => "Terrain Paint",
+        TerrainTool.BrushMode.Smooth => "Terrain Smooth",
+        TerrainTool.BrushMode.Carve => "Terrain Carve",
+        _ => "Terrain Build",
+    };
 
     void OnUndoRedo()
     {
@@ -705,10 +781,17 @@ public class TerrainSculptTool : EditorTool
             EditorGUILayout.Space(4);
             DrawTexturePalette(tool, allowTextureEdit);
         }
-        else
+        else if (s.mode == TerrainTool.BrushMode.Smooth)
         {
-            s.strength = EditorGUILayout.Slider(new GUIContent("Opacity", "How strongly each dab raises/lowers the surface."), s.strength, 0.01f, 10f);
-            EditorGUILayout.LabelField("LMB build · Shift+LMB carve", EditorStyles.miniLabel);
+            s.smoothStrength = EditorGUILayout.Slider(new GUIContent("Opacity", "How strongly each dab relaxes the surface toward its local average."), s.smoothStrength, 0.1f, 10f);
+            EditorGUILayout.LabelField("LMB smooth — rounds off bumps & jaggies", EditorStyles.miniLabel);
+        }
+        else // Build or Carve — both reshape the surface via the shared Opacity (strength)
+        {
+            s.strength = EditorGUILayout.Slider(new GUIContent("Opacity", "How strongly each dab raises (Build) or lowers (Carve) the surface."), s.strength, 0.01f, 10f);
+            EditorGUILayout.LabelField(s.mode == TerrainTool.BrushMode.Carve
+                ? "LMB carve · Shift+LMB build"
+                : "LMB build · Shift+LMB carve", EditorStyles.miniLabel);
         }
 
         if (EditorGUI.EndChangeCheck())
@@ -838,11 +921,16 @@ public class TerrainSculptTool : EditorTool
     {
         if (_modeTabs == null)
         {
-            Texture sculpt = EditorGUIUtility.IconContent("TerrainInspector.TerrainToolSculpt").image;
+            Texture build = EditorGUIUtility.IconContent("TerrainInspector.TerrainToolRaise").image;
+            Texture carve = EditorGUIUtility.IconContent("TerrainInspector.TerrainToolSculpt").image;
+            Texture smooth = EditorGUIUtility.IconContent("TerrainInspector.TerrainToolSmoothHeight").image;
             Texture paint = EditorGUIUtility.IconContent("TerrainInspector.TerrainToolSplat").image;
+            // Order must match the BrushMode enum (Build=0, Carve=1, Smooth=2, Paint=3).
             _modeTabs = new[]
             {
-                new GUIContent(" Sculpt", sculpt, "Reshape the terrain. LMB build · Shift+LMB carve."),
+                new GUIContent(" Build",  build,  "Raise the surface — add solid with LMB. Hold Shift to carve."),
+                new GUIContent(" Carve",  carve,  "Lower the surface — remove material with LMB. Hold Shift to build."),
+                new GUIContent(" Smooth", smooth, "Relax the surface — round off bumps and jagged edges without adding bulk."),
                 new GUIContent(" Paint",  paint,  "Blend a texture onto the surface without changing its shape."),
             };
         }

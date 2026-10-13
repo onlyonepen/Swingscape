@@ -22,15 +22,14 @@ static class TerrainSculptShortcuts
     [Shortcut(Prefix + "Activate Sculpt Tool", KeyCode.B, ShortcutModifiers.Shift)]
     static void ActivateTool() => ToolManager.SetActiveTool<TerrainSculptTool>();
 
-    [Shortcut(Prefix + "Toggle Sculpt or Paint", typeof(SceneView), KeyCode.Tab)]
+    [Shortcut(Prefix + "Cycle Brush Mode", typeof(SceneView), KeyCode.Tab)]
     static void ToggleMode()
     {
         if (!ToolActive)
             return;
         TerrainSculptSettings s = TerrainSculptSettings.instance;
-        s.mode = s.mode == TerrainTool.BrushMode.Sculpt
-            ? TerrainTool.BrushMode.Paint
-            : TerrainTool.BrushMode.Sculpt;
+        int count = System.Enum.GetValues(typeof(TerrainTool.BrushMode)).Length; // Sculpt → Paint → Smooth → …
+        s.mode = (TerrainTool.BrushMode)(((int)s.mode + 1) % count);
         Commit(s);
     }
 
