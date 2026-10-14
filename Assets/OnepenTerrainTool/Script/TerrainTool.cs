@@ -1008,6 +1008,21 @@ public class TerrainTool : MonoBehaviour
     {
         ValidateConfig();
         BuildTextureArray();
+        ApplyLayerToChunks(); // keep chunks on the terrain object's current Unity layer
+    }
+
+    /// <summary>
+    /// Put every existing chunk GameObject on the terrain object's current Unity layer.
+    /// New chunks already inherit it at creation; call this to re-sync after the terrain
+    /// object's layer changes (it runs automatically from <see cref="EnsureInitialized"/>,
+    /// e.g. when the Scene tool is activated or the terrain is generated/loaded).
+    /// </summary>
+    public void ApplyLayerToChunks()
+    {
+        int layer = gameObject.layer;
+        foreach (TerrainChunk chunk in _chunks.Values)
+            if (chunk != null)
+                chunk.gameObject.layer = layer;
     }
 
     /// <summary>Rebuild a single chunk's mesh now (used by edit-mode sculpt/undo so edits show immediately).</summary>
@@ -1530,6 +1545,7 @@ public class TerrainTool : MonoBehaviour
         // GameObjects so culling/LOD can work per chunk.
         if (!Application.isPlaying)
             go.hideFlags = HideFlags.DontSaveInEditor | HideFlags.HideInHierarchy;
+        go.layer = gameObject.layer; // chunks share the terrain object's Unity layer (culling / raycast / navmesh)
         go.transform.SetParent(transform, false);
         go.transform.localPosition = _grid.ChunkLocalPosition(coord);
 
