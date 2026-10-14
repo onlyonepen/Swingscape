@@ -31,6 +31,19 @@ namespace Script.Enemy.State.Attack
             }
 
             if(Time.time - StateEnterTime > Anticipation + Recovery) Enemy.ChangeState(Enemy.stateFactory.CreateAggroState(Enemy));
+
+            if(!shoted) LookAtPlayer();
+        }
+
+        private void LookAtPlayer()
+        {
+            Vector3 dronePos = Enemy.transform.position;
+            Vector3 playerPos = GlobalReference.Instance.player.gameObject.transform.position;
+
+            Vector3 directionToPlayer = (playerPos - dronePos).normalized;
+
+            Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
+            Enemy.transform.rotation = Quaternion.Slerp(Enemy.transform.rotation, targetRotation, Time.deltaTime * 5f);
         }
 
         private void shootProjectile()

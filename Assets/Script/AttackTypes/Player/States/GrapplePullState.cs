@@ -7,7 +7,7 @@ public class GrapplePullState : PlayerState
 {
     private float airFloatForce = 7f;
     private SpringJoint joint;
-    
+
     private float initialEnemyDistance;
     private Vector3 initialPlayerPosition;
     private float expectedDuration;
@@ -18,6 +18,17 @@ public class GrapplePullState : PlayerState
 
     bool grappleEnemy = false;
     private BaseEnemy enemy;
+
+    // --- QTE finisher: a click timed to when the sprites meet (i.e. when the pull actually
+    // completes) executes the enemy immediately instead of requiring a separately-aimed swing.
+    // Driven off LIVE distance to the exit threshold below, not elapsed/expectedDuration —
+    // expectedDuration assumes a constant closing speed and a stationary player, so it drifts
+    // out of sync with the real meeting point as soon as the player moves during the pull.
+    private const float PullSpeed = 40f;
+    private const float ExitDistance = 3f;
+    private const float QteTimingTolerance = 0.2f; // seconds of forgiveness, converted to distance via PullSpeed
+    private const float QteFacingDotThreshold = 0.5f; // ~60 degree cone — "general direction" is enough
+    private bool qteAttempted;
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -40,7 +51,7 @@ public class GrapplePullState : PlayerState
 
         initialPlayerPosition = manager.transform.position;
         initialEnemyDistance = Vector3.Distance(initialPlayerPosition, manager.RUD.GrappledObject.transform.position);
-        expectedDuration = initialEnemyDistance / 40;
+        expectedDuration = initialEnemyDistance / PullSpeed;
 
         if (grappledObj.TryGetComponent<BaseEnemy>( out var component))
         {
@@ -48,6 +59,9 @@ public class GrapplePullState : PlayerState
             grappleEnemy = true;
             enemy = component;
         }
+
+        qteAttempted = false;
+        StaggerQTEIndicator.Instance?.Begin(grappledObj.transform, manager.Cam);
 
         // Ensure the line renderer is ready for a simple 2-point straight line
         manager.GrappleLr.enabled = true;
@@ -91,17 +105,24 @@ public class GrapplePullState : PlayerState
         float percent = expectedDuration > 0 ? Mathf.Clamp01(elapsed / expectedDuration) : 1f;
         
         UpdateObjectPos(percent);
-        
+
         // 2. Secondary active check just in case UpdateObjectPos triggered a deactivation
-        if (grappledObj != null && grappledObj.activeInHierarchy) 
+        if (grappledObj != null && grappledObj.activeInHierarchy)
         {
             float distance = Vector3.Distance(manager.transform.position, grappledObj.transform.position);
-            if (distance <= 3f) 
+
+            // Progress/hit-window both key off this same live distance, not expectedDuration,
+            // so they always match the instant the exit check below actually fires.
+            float meetProgress = Mathf.Clamp01(1f - (distance - ExitDistance) / Mathf.Max(initialEnemyDistance - ExitDistance, 0.0001f));
+            StaggerQTEIndicator.Instance?.SetProgress(meetProgress);
+            TryResolveQte(distance);
+
+            if (distance <= ExitDistance)
             {
                 manager.ChangeState(manager.BaseState);
             }
         }
-        
+
         manager.rb.AddForce(Vector3.up * airFloatForce, ForceMode.Acceleration);
     }
 
@@ -110,12 +131,36 @@ public class GrapplePullState : PlayerState
         base.OnStateExit();
         
         manager.playerHp.TurnOffInvulnerability();
-        
+
         manager.GrappleLr.enabled = false;
-        
-        if (grappledObjRb != null) 
+
+        StaggerQTEIndicator.Instance?.Cancel();
+
+        if (grappledObjRb != null)
         {
             grappledObjRb.linearVelocity = Vector3.zero;
+        }
+    }
+
+    /// <summary>One attempt per pull: a click is judged the instant it's pressed, hit or miss,
+    /// against how close the LIVE distance is to ExitDistance — the actual threshold that ends
+    /// the pull — converted from the requested 0.2s of forgiveness via the known pull speed.</summary>
+    private void TryResolveQte(float currentDistance)
+    {
+        if (qteAttempted || !grappleEnemy) return;
+        if (!manager.Input.AttackPressed) return;
+
+        qteAttempted = true;
+
+        float distanceTolerance = QteTimingTolerance * PullSpeed;
+        bool inTimingWindow = Mathf.Abs(currentDistance - ExitDistance) <= distanceTolerance;
+
+        Vector3 dirToEnemy = (grappledObj.transform.position - manager.Cam.transform.position).normalized;
+        bool isFacingEnemy = Vector3.Dot(manager.Cam.transform.forward, dirToEnemy) >= QteFacingDotThreshold;
+
+        if (inTimingWindow && isFacingEnemy)
+        {
+            manager.Manager.Combat.ExecuteFinisherHit(grappledObj);
         }
     }
 

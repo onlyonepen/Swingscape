@@ -28,6 +28,9 @@ namespace Script.Enemy
 
         [HideInInspector] public bool Iskilled = false;
 
+        /// <summary>Position this enemy woke up at; wander/leash logic should stay relative to this, not (0,0,0).</summary>
+        public Vector3 SpawnPosition { get; private set; }
+
         private Collider col;
         private Attackable attackable;
 
@@ -35,6 +38,7 @@ namespace Script.Enemy
         {
             GetComponent<Grappleable>().Type = Type == EnemyType.HeavyDrone ? GrappleType.Heavy : GrappleType.Light;
             attackable = GetComponent<Attackable>();
+            SpawnPosition = transform.position;
         }
 
         private void Start()
@@ -61,6 +65,7 @@ namespace Script.Enemy
 
         public void GetPull()
         {
+            staggerTime = 2f;
             ChangeState(stateFactory.CreateStaggerState(this));
             attackable.TriggerHitEffects();
         }

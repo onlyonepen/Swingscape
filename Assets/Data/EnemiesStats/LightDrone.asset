@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: LightDrone
   m_EditorClassIdentifier: Assembly-CSharp::Script.Enemy.EnemiesStats.EnemyStatSO
   DetectionRange: 100
-  MoveSpeed: 13
+  MoveSpeed: 30
   AttackFrequentcy: 1
   MaxElevationOffset: 15
+  WanderLeash: 50
+  WanderSpeed: 30
+  WanderHeightRange: 15

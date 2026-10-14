@@ -147,6 +147,21 @@ public class PlayerAttacking : MonoBehaviour
         ExecuteHitboxLogic(activePlane, targets);
     }
 
+    /// <summary>Immediately resolves a hit against a single target, bypassing the normal swing
+    /// windup/hitbox check. Used by the grapple-pull QTE: a well-timed click while reeling in a
+    /// light enemy executes it directly instead of requiring a separately-aimed melee swing.</summary>
+    public void ExecuteFinisherHit(GameObject target)
+    {
+        if (target == null) return;
+
+        var attackable = target.GetComponentInParent<Attackable>();
+        if (attackable == null) return;
+
+        attackable.TriggerHitEffects();
+        var ctx = new AttackContext(target, transform.position, attack1Plane, new HashSet<Splittable>(), new HashSet<Rigidbody>());
+        attackable.ApplyAttack(ctx);
+    }
+
     // --- UPDATED: Now receives the locked targets ---
     private void ExecuteHitboxLogic(Transform activePlane, HashSet<GameObject> targetsToProcess)
     {

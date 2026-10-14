@@ -6,22 +6,71 @@ namespace Script.Enemy.State.Idle
     {
         private float detectionValue;
         private float toAggroTime = 1f;
-        
+
+        private const float ArrivalThreshold = 0.5f;
+
+        private Vector3 wanderTarget;
+        private bool hasWanderTarget;
+
         public DroneIdle(BaseEnemy enemy)
         {
             Enemy = enemy;
         }
-        
+
         public override void OnStateEnter()
         {
             base.OnStateEnter();
             Enemy.rb.linearVelocity = Vector3.zero;
             Enemy.rb.constraints = RigidbodyConstraints.FreezeAll;
+            hasWanderTarget = false;
         }
 
         public override void OnStateUpdate()
         {
             playerCheck();
+            Wander();
+        }
+
+        private void Wander()
+        {
+            Vector3 dronePos = Enemy.transform.position;
+
+            if (!hasWanderTarget)
+            {
+                PickNewWanderTarget();
+            }
+
+            Vector3 toTarget = wanderTarget - dronePos;
+
+            if (toTarget.magnitude <= ArrivalThreshold)
+            {
+                hasWanderTarget = false;
+                return;
+            }
+
+            Vector3 moveDir = toTarget.normalized;
+
+            // Bail into a fresh target instead of pushing through obstacles — this is just
+            // idle flavor movement, not navigation, so it doesn't need to route around things.
+            LayerMask obstacleMask = ~GlobalReference.Instance.playerLayer;
+            if (Physics.Raycast(dronePos, moveDir, 2f, obstacleMask))
+            {
+                hasWanderTarget = false;
+                return;
+            }
+
+            Enemy.transform.position += moveDir * (Enemy.Stat.WanderSpeed * Time.deltaTime);
+
+            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+            Enemy.transform.rotation = Quaternion.Slerp(Enemy.transform.rotation, targetRotation, Time.deltaTime * 5f);
+        }
+
+        private void PickNewWanderTarget()
+        {
+            Vector2 randomCircle = Random.insideUnitCircle * Enemy.Stat.WanderLeash;
+            float heightOffset = Random.Range(-Enemy.Stat.WanderHeightRange, Enemy.Stat.WanderHeightRange);
+            wanderTarget = Enemy.SpawnPosition + new Vector3(randomCircle.x, heightOffset, randomCircle.y);
+            hasWanderTarget = true;
         }
 
         private void playerCheck()
