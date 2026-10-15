@@ -17,7 +17,17 @@ namespace Script.Enemy.State.Death
         public override void OnStateEnter()
         {
             base.OnStateEnter();
-            Enemy.rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+            // Stop the rig's own idle animations (e.g. wing flaps) so it doesn't keep moving on
+            // its own while the corpse is falling - physics should be the only thing driving it now.
+            foreach (var motor in Enemy.GetComponentsInChildren<SimpleTransformMotor>())
+            {
+                motor.enabled = false;
+            }
+
+            // No constraints: let the now-unanimated rig tumble and collide like a normal
+            // physics object instead of dropping straight down with frozen rotation.
+            Enemy.rb.constraints = RigidbodyConstraints.None;
             Enemy.PlayDeathParticles();
         }
     }

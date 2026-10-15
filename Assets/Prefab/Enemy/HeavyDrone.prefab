@@ -9912,6 +9912,8 @@ MonoBehaviour:
   Guntip: {fileID: 7978756932657612231}
   ProjectilePrefab: {fileID: 7938435033835926973, guid: 0edd9ee6531aedb4fb28993797dd5b28, type: 3}
   ChargeUpParticles: {fileID: 1846972830341145116}
+  rigBuilder: {fileID: 7462554405925180503}
+  Rig: {fileID: 1650399237577780241}
   Iskilled: 0
 --- !u!33 &7624915432572730572
 MeshFilter:
@@ -10062,67 +10064,26 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7560787973464185794, guid: 6164a127e91850745a268558a013f3ae, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 7226199688741834961}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6164a127e91850745a268558a013f3ae, type: 3}
---- !u!1 &568267081654012547 stripped
+--- !u!1 &1650399237577780241 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 7560787973464185794, guid: 6164a127e91850745a268558a013f3ae, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8784506509377666384, guid: 6164a127e91850745a268558a013f3ae, type: 3}
   m_PrefabInstance: {fileID: 8002812408150741313}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &7226199688741834961
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 568267081654012547}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0cd17a53d1fca94fb1512049d704cff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SimpleTransformMotor
-  targetPoint: {fileID: 0}
-  space: 1
-  positionOffset: {x: 0, y: 2, z: 0}
-  rotationOffset: {x: 0, y: 0, z: 0}
-  scaleOffset: {x: 0, y: 0, z: 0}
-  animatePosition: 1
-  animateRotation: 1
-  animateScale: 0
-  duration: 1
-  easeCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  moveType: 2
-  waitTimeAtPoints: 0
-  playOnStart: 1
-  randomizeStartTransform: 0
 --- !u!4 &5914614706015770543 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4403216143938406126, guid: 6164a127e91850745a268558a013f3ae, type: 3}
   m_PrefabInstance: {fileID: 8002812408150741313}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7462554405925180503 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 621464646479217942, guid: 6164a127e91850745a268558a013f3ae, type: 3}
+  m_PrefabInstance: {fileID: 8002812408150741313}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fff0960ef4ea6e04eac66b4a7fd2189d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Animation.Rigging::UnityEngine.Animations.Rigging.RigBuilder

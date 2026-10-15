@@ -58,6 +58,8 @@ MonoBehaviour:
   Guntip: {fileID: 1804147348879603340}
   ProjectilePrefab: {fileID: 7938435033835926973, guid: 0edd9ee6531aedb4fb28993797dd5b28, type: 3}
   ChargeUpParticles: {fileID: 1275402679055825762}
+  rigBuilder: {fileID: 7386264536548708111}
+  Rig: {fileID: 8304645963513867536}
   Iskilled: 0
 --- !u!114 &7194639545549055233
 MonoBehaviour:
@@ -5139,5 +5141,21 @@ Transform:
 --- !u!4 &6542373704630263985 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6516480498981354540, guid: 39aafa10c6319f54fae3038f325b940a, type: 3}
+  m_PrefabInstance: {fileID: 46195174725704861}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7386264536548708111 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7360383940866200466, guid: 39aafa10c6319f54fae3038f325b940a, type: 3}
+  m_PrefabInstance: {fileID: 46195174725704861}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fff0960ef4ea6e04eac66b4a7fd2189d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Animation.Rigging::UnityEngine.Animations.Rigging.RigBuilder
+--- !u!1 &8304645963513867536 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8350827944083255693, guid: 39aafa10c6319f54fae3038f325b940a, type: 3}
   m_PrefabInstance: {fileID: 46195174725704861}
   m_PrefabAsset: {fileID: 0}

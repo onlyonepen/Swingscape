@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using JL.Splitting;
 using Script.Enemy.EnemiesStats;
 using Script.Enemy.State;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 using VInspector;
 
 namespace Script.Enemy
@@ -19,6 +21,8 @@ namespace Script.Enemy
         [SerializeField] internal Transform Guntip;
         [SerializeField] internal GameObject ProjectilePrefab;
         [SerializeField] internal ParticleSystem ChargeUpParticles;
+        [SerializeField] internal RigBuilder rigBuilder;
+        [SerializeField] internal GameObject Rig;
 
         /// <summary>Fired by any enemy the moment it dies. Subscribe to reward the player, update score, etc.</summary>
         public static event Action OnAnyEnemyDied;
@@ -130,14 +134,48 @@ namespace Script.Enemy
             OnAnyEnemyDied?.Invoke();
 
             // The split halves get reparented to the scene root when they're cut (so they can
-            // fly apart with physics), so they're no longer children of this object by the time
-            // it deactivates below — clean them up after a delay (instead of instantly) so the
+            // fly apart with physics) - clean them up after a delay (instead of instantly) so the
             // debris is actually visible flying apart rather than vanishing with the enemy.
             const float debrisLifetime = 3f;
             if (slicedPosObject != null) Destroy(slicedPosObject, debrisLifetime);
             if (slicedNegObject != null) Destroy(slicedNegObject, debrisLifetime);
 
-            gameObject.SetActive(false);
+            BreakApartRig();
+        }
+
+        // Gives every rig piece (each of this enemy's simple-shape children) its own Rigidbody,
+        // then removes the RigBuilder driving the constraint rig (DampedTransform chains etc.) -
+        // without this, the rig keeps snapping those pieces back into their animated pose every
+        // frame regardless of physics, which is why they stayed "linked" instead of falling apart.
+        private void BreakApartRig()
+        {
+            foreach (Collider pieceCollider in GetComponentsInChildren<Collider>())
+            {
+                if (pieceCollider.gameObject == gameObject) continue;
+
+                if (!pieceCollider.TryGetComponent<Rigidbody>(out _))
+                {
+                    pieceCollider.gameObject.AddComponent<Rigidbody>();
+                    pieceCollider.transform.parent = null;
+                }
+
+                // Copy (not just add) so the piece keeps the same attack type/hit effects the
+                // enemy had, instead of an unconfigured Attackable that can't react to anything.
+                if (!pieceCollider.TryGetComponent<Attackable>(out var pieceAttackable))
+                    pieceAttackable = pieceCollider.gameObject.AddComponent<Attackable>();
+                attackable.CopyTo(pieceAttackable);
+            }
+            
+            // RigBuilder needs an Animator to host its PlayableGraph. With the graph gone, that
+            // Animator (no Controller/Avatar of its own) would still run every frame and reset
+            // the whole bound hierarchy to its default (all-zero) pose, warping everything to
+            // local (0,0,0) - so it has to be stopped too, not just RigBuilder.
+            if (rigBuilder != null)
+            {
+                if (rigBuilder.TryGetComponent<Animator>(out var animator)) animator.enabled = false;
+                Destroy(rigBuilder);
+                Destroy(Rig);
+            }
         }
 
 
