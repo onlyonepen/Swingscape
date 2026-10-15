@@ -34,6 +34,12 @@ namespace Script.Enemy
         private Collider col;
         private Attackable attackable;
 
+        // HeavyDrone hovers with a constant sine bob (2m peak-to-trough, 1s period) on top of
+        // whatever the active state is doing with transform.position, except while Staggered/Dead.
+        private const float BobTravel = 5f;
+        private const float BobPeriod = 1f;
+        private float currentBobOffset;
+
         private void Awake()
         {
             GetComponent<Grappleable>().Type = Type == EnemyType.HeavyDrone ? GrappleType.Heavy : GrappleType.Light;
@@ -60,7 +66,21 @@ namespace Script.Enemy
         
         private void Update()
         {
+            // Undo last frame's bob first so every state's movement logic (Wander, StrafeAroundPlayer,
+            // etc.) always works off the "real" unbobbed position instead of compounding on top of it.
+            if (currentBobOffset != 0f)
+            {
+                transform.position -= Vector3.up * currentBobOffset;
+                currentBobOffset = 0f;
+            }
+
             currentState.OnStateUpdate();
+
+            if (Type == EnemyType.HeavyDrone && currentState.AllowsBob)
+            {
+                currentBobOffset = Mathf.Sin(Time.time * (2f * Mathf.PI / BobPeriod)) * (BobTravel * 0.5f);
+                transform.position += Vector3.up * currentBobOffset;
+            }
         }
 
         public void GetPull()

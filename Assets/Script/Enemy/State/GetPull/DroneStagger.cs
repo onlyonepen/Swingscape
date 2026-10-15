@@ -9,6 +9,8 @@ namespace Script.Enemy.State.GetPull
             Enemy = enemy;
         }
 
+        public override bool AllowsBob => false;
+
         public override void OnStateEnter()
         {
             base.OnStateEnter();

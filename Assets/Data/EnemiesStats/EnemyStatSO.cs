@@ -20,5 +20,14 @@ namespace Script.Enemy.EnemiesStats
 
         [Tooltip("How far above or below spawn height an idle enemy's wander target can land.")]
         public float WanderHeightRange = 5f;
+
+        [Tooltip("Degrees per second an idly wandering enemy can steer its heading. Lower values make it swing wide, curved turns instead of snapping straight at a new target.")]
+        public float WanderTurnSpeed = 60f;
+
+        [Tooltip("How far up/down an idly wandering enemy bobs, layered on top of its wander movement.")]
+        public float WanderBobAmplitude = 0.3f;
+
+        [Tooltip("Bob cycles per second while idly wandering.")]
+        public float WanderBobSpeed = 0.5f;
     }
 }

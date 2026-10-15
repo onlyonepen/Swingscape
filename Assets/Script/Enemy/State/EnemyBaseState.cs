@@ -15,5 +15,8 @@ namespace Script.Enemy.State
         }
         public virtual void OnStateUpdate() {  }
         public virtual void OnStateExit() {  }
+
+        /// <summary>Whether BaseEnemy's idle hover bob (HeavyDrone only) should run while this state is active.</summary>
+        public virtual bool AllowsBob => true;
     }
 }

@@ -12,6 +12,8 @@ namespace Script.Enemy.State.Death
             Enemy = enemy;
         }
 
+        public override bool AllowsBob => false;
+
         public override void OnStateEnter()
         {
             base.OnStateEnter();
