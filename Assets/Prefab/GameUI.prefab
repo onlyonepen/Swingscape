@@ -1291,7 +1291,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &375440905805656602
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2436,6 +2436,7 @@ MonoBehaviour:
   boostOverlay: {fileID: 8826762081302080990}
   objectiveText: {fileID: 5150160852277615116}
   redScreenOverlay: {fileID: 9070573497751849173}
+  boostOverlayFadeDuration: 0.25
   pauseScreen: {fileID: 2260129064770049345}
   gameOverScreen: {fileID: 7534794155143653747}
   winScreen: {fileID: 9127144620203489151}
@@ -2878,13 +2879,14 @@ GameObject:
   - component: {fileID: 1027975820028140718}
   - component: {fileID: 6606260641006004923}
   - component: {fileID: 2193356713913639811}
+  - component: {fileID: 1604529704249400263}
   m_Layer: 5
   m_Name: BoostOverlay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1027975820028140718
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2942,6 +2944,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!225 &1604529704249400263
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8826762081302080990}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &9055065655031492311
 GameObject:
   m_ObjectHideFlags: 0

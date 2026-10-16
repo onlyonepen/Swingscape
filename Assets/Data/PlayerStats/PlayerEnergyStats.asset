@@ -15,7 +15,7 @@ MonoBehaviour:
   useEnergy: 0
   MaxEnergy: 100
   InitialThrowUsage: 20
-  GrappleLeapUsage: 40
+  GrappleReelInUsage: 40
   GrappleDashUsage: 10
   EnergyRegeneration: 5
   GroundedEnergyRegeneration: 50

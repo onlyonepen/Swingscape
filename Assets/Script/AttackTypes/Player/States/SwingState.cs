@@ -1,4 +1,3 @@
-using Script.Enemy;
 using UnityEngine;
 
 public class SwingState : PlayerState
@@ -16,6 +15,9 @@ public class SwingState : PlayerState
 
     private bool SwingDashed = false;
     public bool HasSwingDashed => SwingDashed;
+
+    // Tracks the held->released edge so ReelIn can fire the one-shot release kick exactly once.
+    private bool wasReeling;
 
     // Grappling something right next to the player collapses maxDistance/minDistance toward 0,
     // which turns the SpringJoint into a near-zero hard limit - any tiny movement then triggers
@@ -106,26 +108,15 @@ public class SwingState : PlayerState
             }
         }
 
-        if (manager.Input.SprintPressed && manager.Energy.UseEnergy(manager.Energy.stats.GrappleLeapUsage))
-        {
-            manager.ChangeState(manager.GrappleLeapState);
-            if (grapple == GrappleType.Light)
-            {
-                Vector3 toplayer = manager.transform.position - GrapplePoint;
-                float playerAffectedWeight = 35;
-                manager.RUD.GrappledObject.GetComponent<BaseEnemy>().Stagger(2f);
-                manager.RUD.GrappledObject.GetComponent<Rigidbody>().AddForce(toplayer.normalized * playerAffectedWeight, ForceMode.Impulse);
-            }
-        }
-
         vertInput = manager.Input.Move.y;
         horiInput = manager.Input.Move.x;
         vertInput = new Vector2(horiInput, vertInput).normalized.y;
         horiInput = new Vector2(horiInput, vertInput).normalized.x;
 
         drawRope();
-        AirControl();
+        AirControl(manager.Input.SprintHeld ? manager.grappleStats.GrappleAirSteerStrength : 1f);
         SwingDash();
+        ReelIn(trueTarget);
 
         if (Vector3.Distance(GrapplePoint, manager.transform.position) < currentDist)
         {
@@ -163,10 +154,10 @@ public class SwingState : PlayerState
         manager.GrappleLr.SetPosition(0, manager.Guntip.position);
     }
 
-    private void AirControl()
+    private void AirControl(float strengthMultiplier = 1f)
     {
-        float vertical = vertInput * manager.grappleStats.AirControlFwdForce;
-        float horizontal = horiInput * manager.grappleStats.AirControlHorizontalForce;
+        float vertical = vertInput * manager.grappleStats.AirControlFwdForce * strengthMultiplier;
+        float horizontal = horiInput * manager.grappleStats.AirControlHorizontalForce * strengthMultiplier;
 
         Vector3 TotalForceDir = (manager.Cam.transform.forward * vertical) + (manager.Cam.transform.right * horizontal);
         manager.rb.AddForce(TotalForceDir * Time.deltaTime, ForceMode.Force);
@@ -191,5 +182,54 @@ public class SwingState : PlayerState
     {
         joint.maxDistance = Mathf.Max(currentDist * 0.8f, MinJointDistance);
         joint.minDistance = Mathf.Max(currentDist * 0.25f, MinJointDistance * 0.25f);
+    }
+
+    // Echo Point Nova-style hybrid pull: accelerate toward the anchor up to a capped speed
+    // (pullAccel/maxPullSpeed) rather than an open-ended force, partially bleed off sideways
+    // momentum (lateralDamping) instead of either preserving it fully or snapping straight to
+    // the rope, let air input steer mid-pull (airSteerStrength, applied to AirControl in
+    // OnStateUpdate), and keep whatever's left when you let go - plus a small kick - instead of
+    // just stopping dead (releaseBoost).
+    private void ReelIn(Vector3 targetPoint)
+    {
+        bool reeling = manager.Input.SprintHeld && manager.Energy.UseEnergy(manager.Energy.stats.GrappleReelInUsage * Time.deltaTime);
+
+        if (!reeling)
+        {
+            if (wasReeling)
+            {
+                Vector3 releaseDir = (targetPoint - manager.transform.position).normalized;
+                manager.rb.AddForce(releaseDir * manager.grappleStats.GrappleReleaseBoost, ForceMode.VelocityChange);
+            }
+            wasReeling = false;
+            return;
+        }
+
+        Vector3 toTarget = targetPoint - manager.transform.position;
+        float distance = toTarget.magnitude;
+        wasReeling = true;
+        if (distance <= MinJointDistance) return;
+
+        Vector3 pullDir = toTarget / distance;
+        Vector3 velocity = manager.rb.linearVelocity;
+        float pullSpeed = Vector3.Dot(velocity, pullDir);
+
+        if (pullSpeed < manager.grappleStats.GrappleMaxPullSpeed)
+        {
+            float accel = manager.grappleStats.GrapplePullAccel * Time.deltaTime;
+            manager.rb.AddForce(pullDir * accel, ForceMode.VelocityChange);
+        }
+
+        // Bleed sideways momentum toward a retained floor rather than toward zero - so some of
+        // the original swing carries through - using a framerate-independent exponential decay
+        // (rate, not a flat per-frame fraction) so it fades out smoothly instead of snapping.
+        Vector3 lateralVelocity = velocity - pullDir * pullSpeed;
+        Vector3 retainedLateral = lateralVelocity * manager.grappleStats.GrappleMomentumRetention;
+        float decayLerp = 1f - Mathf.Exp(-manager.grappleStats.GrappleLateralDamping * Time.deltaTime);
+        Vector3 newLateralVelocity = Vector3.Lerp(lateralVelocity, retainedLateral, decayLerp);
+        manager.rb.AddForce(newLateralVelocity - lateralVelocity, ForceMode.VelocityChange);
+
+        currentDist = Mathf.Max(distance - 0.1f, MinJointDistance);
+        RecalibateJointMaxDistance();
     }
 }

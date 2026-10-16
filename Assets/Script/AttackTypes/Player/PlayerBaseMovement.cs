@@ -58,7 +58,7 @@ public class PlayerBaseMovement : MonoBehaviour
 
     #region Extra gravity
     // Seeded from stats.hasFallingExtraGrav in Awake — grapple states toggle this at runtime
-    // (GrappleLeapState/GrapplePullintoState), so it can't read straight from the shared SO.
+    // (GrapplePullintoState), so it can't read straight from the shared SO.
     [HideInInspector] public bool hasFallingExtraGrav;
 
     #endregion

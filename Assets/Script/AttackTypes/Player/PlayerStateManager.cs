@@ -66,7 +66,6 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerState SwingState = new SwingState();
     public PlayerState GrapplePullState = new GrapplePullState();
     public PlayerState GrapplePullinState = new GrapplePullintoState();
-    public PlayerState GrappleLeapState = new GrappleLeapState();
     public PlayerState WallRunState = new WallRunningState();
     public PlayerState MantleState = new MantleState();
     public PlayerState SlideState = new SlideState();

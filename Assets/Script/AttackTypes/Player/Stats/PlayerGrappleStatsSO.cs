@@ -21,6 +21,12 @@ public class PlayerGrappleStatsSO : ScriptableObject
     public float SwingDashPower = 20;
     public float SwingDashMaxPower = 18;
     public float SwingDashMinPower = 5;
+    public float GrapplePullAccel = 60f;
+    public float GrappleMaxPullSpeed = 40f;
+    public float GrappleLateralDamping = 4f;
+    [Range(0f, 1f)] public float GrappleMomentumRetention = 0.25f;
+    public float GrappleAirSteerStrength = 1f;
+    public float GrappleReleaseBoost = 5f;
 
     [Header("Pull into")]
     public float PullIntoSpeed = 40f;

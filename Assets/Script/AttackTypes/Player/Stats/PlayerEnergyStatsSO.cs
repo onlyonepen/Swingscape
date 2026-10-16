@@ -8,7 +8,7 @@ public class PlayerEnergyStatsSO : ScriptableObject
 
     [Header("Usage costs")]
     public float InitialThrowUsage = 20;
-    public float GrappleLeapUsage = 40;
+    public float GrappleReelInUsage = 40;
     public float GrappleDashUsage = 10;
 
     [Header("Regeneration")]
