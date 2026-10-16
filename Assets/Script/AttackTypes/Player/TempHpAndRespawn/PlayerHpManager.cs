@@ -15,7 +15,6 @@ public class PlayerHpManager : MonoBehaviour
 
     [Header("Invulnerability")]
     public bool isInvulnerable = false;
-    [SerializeField] private GameObject InvulnerabilityEfffect;
 
     private List<Transform> hpList = new List<Transform>();
     
@@ -30,13 +29,13 @@ public class PlayerHpManager : MonoBehaviour
 
     public void TurnOnInvulnerability()
     {
-        InvulnerabilityEfffect.SetActive(true);
+        if (GameUIManager.Instance) GameUIManager.Instance.ShowBoostOverlay(true);
         isInvulnerable = true;
     }
 
     public void TurnOffInvulnerability()
     {
-        InvulnerabilityEfffect.SetActive(false);
+        if (GameUIManager.Instance) GameUIManager.Instance.ShowBoostOverlay(false);
         isInvulnerable = false;
     }
     

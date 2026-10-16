@@ -17,6 +17,11 @@ public class SwingState : PlayerState
     private bool SwingDashed = false;
     public bool HasSwingDashed => SwingDashed;
 
+    // Grappling something right next to the player collapses maxDistance/minDistance toward 0,
+    // which turns the SpringJoint into a near-zero hard limit - any tiny movement then triggers
+    // a violent correction force (the "Invalid worldAABB" physics explosion).
+    private const float MinJointDistance = 1f;
+
 
     public override void OnStateEnter(PlayerStateManager gamestateManager)
     {
@@ -142,7 +147,7 @@ public class SwingState : PlayerState
         joint.autoConfigureConnectedAnchor = false;
         joint.connectedAnchor = GrapplePoint;
 
-        float distance = Vector3.Distance(manager.transform.position, GrapplePoint);
+        float distance = Mathf.Max(Vector3.Distance(manager.transform.position, GrapplePoint), MinJointDistance);
         joint.maxDistance = distance * 1f;
         joint.minDistance = distance * 0.25f;
 
@@ -184,7 +189,7 @@ public class SwingState : PlayerState
 
     private void RecalibateJointMaxDistance()
     {
-        joint.maxDistance = currentDist * 0.8f;
-        joint.minDistance = currentDist * 0.25f;
+        joint.maxDistance = Mathf.Max(currentDist * 0.8f, MinJointDistance);
+        joint.minDistance = Mathf.Max(currentDist * 0.25f, MinJointDistance * 0.25f);
     }
 }

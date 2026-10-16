@@ -7,7 +7,8 @@ using UnityEngine;
 /// Utils (GlobalReference) and GameUI prefabs exist in the scene (adding a GameUIManager to
 /// GameUI if it's missing, since that component self-wires its own overlay references), then
 /// connects the cross-object references that still have to be dragged in by hand (HUD canvas,
-/// prediction reticle, HP + invulnerability overlays, GlobalReference.player).
+/// prediction reticle, HP overlay, GlobalReference.player). Invulnerability now goes through
+/// GameUIManager.Instance.ShowBoostOverlay instead of a dragged-in reference.
 /// </summary>
 public static class PlayerSceneSetup
 {
@@ -61,7 +62,6 @@ public static class PlayerSceneSetup
             Canvas canvas = gameUI.GetComponent<Canvas>();
             Transform autoAim = gameUI.transform.Find("AutoAim");
             Transform hpContainer = gameUI.transform.Find("HPContainer");
-            Transform boostOverlay = gameUI.transform.Find("BoostOverlay");
 
             if (gameUI.transform.Find("OOBRespawnPrompt") == null)
             {
@@ -74,7 +74,6 @@ public static class PlayerSceneSetup
             SetRef(targeting, "targetCanvas", canvas);
             SetRef(targeting, "predictionPoint", autoAim != null ? autoAim.GetComponent<RectTransform>() : null);
             SetRef(hpManager, "HpContainer", hpContainer != null ? hpContainer.gameObject : null);
-            SetRef(hpManager, "InvulnerabilityEfffect", boostOverlay != null ? boostOverlay.gameObject : null);
         }
 
         EditorSceneManager.MarkSceneDirty(player.scene);

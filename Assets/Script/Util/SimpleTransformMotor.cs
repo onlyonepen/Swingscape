@@ -120,7 +120,14 @@ public class SimpleTransformMotor : MonoBehaviour
 
         if (animateRotation)
         {
-            Quaternion rotation = Quaternion.SlerpUnclamped(startRotation, endRotation, t);
+            // Slerping between start/end quaternions collapses to a no-op for multi-turn
+            // offsets (e.g. 360 degrees == identity), so explicit offsets are interpolated
+            // as raw Euler degrees instead. Target-point mode still slerps since there is
+            // no "offset" to speak of, just an orientation to rotate towards.
+            Quaternion rotation = targetPoint != null
+                ? Quaternion.SlerpUnclamped(startRotation, endRotation, t)
+                : startRotation * Quaternion.Euler(rotationOffset * t);
+
             if (space == Space.World)
                 transform.rotation = rotation;
             else

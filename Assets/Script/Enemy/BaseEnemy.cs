@@ -149,7 +149,15 @@ namespace Script.Enemy
         // frame regardless of physics, which is why they stayed "linked" instead of falling apart.
         private void BreakApartRig()
         {
-            foreach (Collider pieceCollider in GetComponentsInChildren<Collider>())
+            // Stop the rig from driving these transforms BEFORE any of them get reparented -
+            // a constraint still bound to a piece via a stale stream handle after it's been
+            // unparented can snap it to a garbage world pose the instant the rig next evaluates.
+            if (rigBuilder != null && rigBuilder.TryGetComponent<Animator>(out var animator))
+                animator.enabled = false;
+
+            Collider[] pieceColliders = GetComponentsInChildren<Collider>();
+
+            foreach (Collider pieceCollider in pieceColliders)
             {
                 if (pieceCollider.gameObject == gameObject) continue;
 
@@ -165,14 +173,20 @@ namespace Script.Enemy
                     pieceAttackable = pieceCollider.gameObject.AddComponent<Attackable>();
                 attackable.CopyTo(pieceAttackable);
             }
-            
-            // RigBuilder needs an Animator to host its PlayableGraph. With the graph gone, that
-            // Animator (no Controller/Avatar of its own) would still run every frame and reset
-            // the whole bound hierarchy to its default (all-zero) pose, warping everything to
-            // local (0,0,0) - so it has to be stopped too, not just RigBuilder.
+
+            // These pieces were touching/overlapping as parts of one continuous rig mesh - if
+            // PhysX has to resolve all that overlap the instant they all become independent
+            // Rigidbodies, it can fling a piece apart hard enough to produce an invalid worldAABB.
+            for (int i = 0; i < pieceColliders.Length; i++)
+            {
+                for (int j = i + 1; j < pieceColliders.Length; j++)
+                {
+                    Physics.IgnoreCollision(pieceColliders[i], pieceColliders[j], true);
+                }
+            }
+
             if (rigBuilder != null)
             {
-                if (rigBuilder.TryGetComponent<Animator>(out var animator)) animator.enabled = false;
                 Destroy(rigBuilder);
                 Destroy(Rig);
             }

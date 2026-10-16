@@ -1,3 +1,4 @@
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,6 +28,12 @@ public class GameUIManager : MonoBehaviour
     [Header("Overlays")]
     public Image redScreenOverlay;
 
+    [Header("Boost Overlay Fade")]
+    [SerializeField] private float boostOverlayFadeDuration = 0.25f;
+
+    private CanvasGroup boostOverlayGroup;
+    private Tween boostOverlayTween;
+
     [Header("Screens")]
     public GameObject pauseScreen;
     public GameObject gameOverScreen;
@@ -49,6 +56,12 @@ public class GameUIManager : MonoBehaviour
         if (!reticle) reticle = transform.Find("Recticle")?.gameObject;
         if (!autoAim) autoAim = transform.Find("AutoAim")?.gameObject;
         if (!boostOverlay) boostOverlay = transform.Find("BoostOverlay")?.gameObject;
+        if (boostOverlay)
+        {
+            boostOverlayGroup = boostOverlay.GetComponent<CanvasGroup>();
+            if (!boostOverlayGroup) boostOverlayGroup = boostOverlay.AddComponent<CanvasGroup>();
+            boostOverlay.SetActive(true);
+        }
         if (!objectiveText) objectiveText = transform.Find("Objective/BG/ObjectiveText")?.GetComponent<TextMeshProUGUI>();
         if (!redScreenOverlay) redScreenOverlay = transform.Find("RedScreenOverlay")?.GetComponent<Image>();
         if (!pauseScreen) pauseScreen = transform.Find("PauseScreen")?.gameObject;
@@ -98,5 +111,13 @@ public class GameUIManager : MonoBehaviour
         Color c = redScreenOverlay.color;
         c.a = alpha;
         redScreenOverlay.color = c;
+    }
+
+    public void ShowBoostOverlay(bool show)
+    {
+        if (!boostOverlayGroup) return;
+
+        boostOverlayTween?.Kill();
+        boostOverlayTween = boostOverlayGroup.DOFade(show ? 1f : 0f, boostOverlayFadeDuration).SetUpdate(true);
     }
 }
