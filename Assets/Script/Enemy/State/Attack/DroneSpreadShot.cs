@@ -67,7 +67,7 @@ namespace Script.Enemy.State.Attack
         private void summonProjectile(Quaternion Spawnrotation)
         {
             GameObject bullet = GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, Spawnrotation);
-            bullet.GetComponent<BasicEnemyProjectile>().ProjectileOwner = Enemy;
+            bullet.GetComponent<BadBeeProjectile>().ProjectileOwner = Enemy;
         }
     }
     

@@ -50,7 +50,7 @@ namespace Script.Enemy.State.Attack
         {
             Enemy.Guntip.LookAt(GlobalReference.Instance.player.transform.position);
             GameObject bullet = GameObject.Instantiate(Enemy.ProjectilePrefab, Enemy.Guntip.position, Enemy.Guntip.rotation);
-            bullet.GetComponent<BasicEnemyProjectile>().ProjectileOwner = Enemy;
+            bullet.GetComponent<BadBeeProjectile>().ProjectileOwner = Enemy;
             Enemy.ChargeUpParticles.Stop();
             ChargeUpSound.Stop();
             AudioManager.Instance.PlayAudioByName("DroneShot", Enemy.transform.position);

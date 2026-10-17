@@ -1,7 +1,7 @@
 ﻿using Script.Enemy;
 using UnityEngine;
 
-public class BasicEnemyProjectile : MonoBehaviour
+public class BadBeeProjectile : MonoBehaviour
 {
         public float speed = 50f;
         public float lifetime = 10f;
