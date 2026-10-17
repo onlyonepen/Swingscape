@@ -25,11 +25,11 @@ MonoBehaviour:
   SwingDashPower: 6
   SwingDashMaxPower: 17
   SwingDashMinPower: 5
-  GrapplePullAccel: 60
-  GrappleMaxPullSpeed: 40
+  GrapplePullAccel: 50
+  GrappleMaxPullSpeed: 30
   GrappleLateralDamping: 4
   GrappleMomentumRetention: 0.25
-  GrappleAirSteerStrength: 1
+  GrappleAirSteerStrength: 5
   GrappleReleaseBoost: 5
   PullIntoSpeed: 40
   OvershootYAxis: 2

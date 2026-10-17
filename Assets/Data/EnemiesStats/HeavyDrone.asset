@@ -19,3 +19,6 @@ MonoBehaviour:
   WanderLeash: 50
   WanderSpeed: 30
   WanderHeightRange: 15
+  WanderTurnSpeed: 60
+  WanderBobAmplitude: 0.5
+  WanderBobSpeed: 0.5
