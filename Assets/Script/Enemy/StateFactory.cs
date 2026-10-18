@@ -30,6 +30,6 @@ namespace Script.Enemy
 
     public class HeavyDroneFactory : DroneFactoryBase
     {
-        public override EnemyBaseState CreateAttackState(BaseEnemy enemy) => new DroneSpreadShot(enemy);
+        public override EnemyBaseState CreateAttackState(BaseEnemy enemy) => new DroneLaserAttack(enemy);
     }
 }

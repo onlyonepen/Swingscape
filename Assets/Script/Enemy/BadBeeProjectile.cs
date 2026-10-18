@@ -9,6 +9,8 @@ public class BadBeeProjectile : MonoBehaviour
 
         [HideInInspector]public BaseEnemy ProjectileOwner;
 
+        [SerializeField] private ParticleSystem BurstParticles;
+
         private void OnEnable()
         {
                 spawnTimeStamp = Time.time;
@@ -19,6 +21,7 @@ public class BadBeeProjectile : MonoBehaviour
                 transform.position += transform.forward * speed * Time.deltaTime;
                 if (Time.time - spawnTimeStamp > lifetime)
                 {
+                        Burst();
                         Destroy(gameObject);
                 }
         }
@@ -28,6 +31,17 @@ public class BadBeeProjectile : MonoBehaviour
                 bool hitPlayer = (1 << collision.gameObject.layer & GlobalReference.Instance.playerLayer) != 0;
                 bool hitTerrain = (1 << collision.gameObject.layer & GlobalReference.Instance.TerrainLayer) != 0;
                 if(hitPlayer) GlobalReference.Instance.player.Health.takedamage();
-                if(hitPlayer || hitTerrain) Destroy(gameObject);
+                if (hitPlayer || hitTerrain)
+                {
+                        Burst();
+                        Destroy(gameObject);
+                }
+        }
+
+        private void Burst()
+        {
+                if (BurstParticles == null) return;
+                BurstParticles.gameObject.transform.parent = null;
+                BurstParticles.Play();
         }
 }

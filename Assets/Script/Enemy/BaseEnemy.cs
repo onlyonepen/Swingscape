@@ -140,14 +140,13 @@ namespace Script.Enemy
             if (slicedPosObject != null) Destroy(slicedPosObject, debrisLifetime);
             if (slicedNegObject != null) Destroy(slicedNegObject, debrisLifetime);
 
-            BreakApartRig();
+            BreakApartIntoPieces();
         }
 
-        // Gives every rig piece (each of this enemy's simple-shape children) its own Rigidbody,
-        // then removes the RigBuilder driving the constraint rig (DampedTransform chains etc.) -
-        // without this, the rig keeps snapping those pieces back into their animated pose every
-        // frame regardless of physics, which is why they stayed "linked" instead of falling apart.
-        private void BreakApartRig()
+        // Detaches every visible body part into its own independent, attackable physics object,
+        // then disables the now-empty enemy shell. Driven off MeshRenderers (not colliders) so
+        // every piece the player can actually see ends up as real falling debris.
+        private void BreakApartIntoPieces()
         {
             // Stop the rig from driving these transforms BEFORE any of them get reparented -
             // a constraint still bound to a piece via a stale stream handle after it's been
@@ -155,41 +154,22 @@ namespace Script.Enemy
             if (rigBuilder != null && rigBuilder.TryGetComponent<Animator>(out var animator))
                 animator.enabled = false;
 
-            Collider[] pieceColliders = GetComponentsInChildren<Collider>();
-
-            foreach (Collider pieceCollider in pieceColliders)
+            foreach (MeshRenderer pieceRenderer in GetComponentsInChildren<MeshRenderer>())
             {
-                if (pieceCollider.gameObject == gameObject) continue;
+                GameObject piece = pieceRenderer.gameObject;
+                piece.transform.parent = null;
 
-                if (!pieceCollider.TryGetComponent<Rigidbody>(out _))
-                {
-                    pieceCollider.gameObject.AddComponent<Rigidbody>();
-                    pieceCollider.transform.parent = null;
-                }
+                if (!piece.TryGetComponent<Rigidbody>(out _))
+                    piece.AddComponent<Rigidbody>();
 
                 // Copy (not just add) so the piece keeps the same attack type/hit effects the
                 // enemy had, instead of an unconfigured Attackable that can't react to anything.
-                if (!pieceCollider.TryGetComponent<Attackable>(out var pieceAttackable))
-                    pieceAttackable = pieceCollider.gameObject.AddComponent<Attackable>();
+                if (!piece.TryGetComponent<Attackable>(out var pieceAttackable))
+                    pieceAttackable = piece.AddComponent<Attackable>();
                 attackable.CopyTo(pieceAttackable);
             }
 
-            // These pieces were touching/overlapping as parts of one continuous rig mesh - if
-            // PhysX has to resolve all that overlap the instant they all become independent
-            // Rigidbodies, it can fling a piece apart hard enough to produce an invalid worldAABB.
-            for (int i = 0; i < pieceColliders.Length; i++)
-            {
-                for (int j = i + 1; j < pieceColliders.Length; j++)
-                {
-                    Physics.IgnoreCollision(pieceColliders[i], pieceColliders[j], true);
-                }
-            }
-
-            if (rigBuilder != null)
-            {
-                Destroy(rigBuilder);
-                Destroy(Rig);
-            }
+            gameObject.SetActive(false);
         }
 
 

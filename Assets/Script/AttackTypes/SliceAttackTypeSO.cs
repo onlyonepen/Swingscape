@@ -73,9 +73,13 @@ public class SliceAttackTypeSO : AttackTypeSO
             var copyFilter = visualCopy.AddComponent<MeshFilter>();
             copyFilter.sharedMesh = meshFilter.sharedMesh;
 
+            // The split plugin hard-requires a Renderer on whatever it's splitting - always add
+            // one, even if the piece being hit (e.g. the owner's own hit-volume collider) never
+            // had a Renderer of its own to copy materials from.
+            var copyRenderer = visualCopy.AddComponent<MeshRenderer>();
             if (originalRenderer != null)
             {
-                visualCopy.AddComponent<MeshRenderer>().sharedMaterials = originalRenderer.sharedMaterials;
+                copyRenderer.sharedMaterials = originalRenderer.sharedMaterials;
                 originalRenderer.enabled = false;
             }
 

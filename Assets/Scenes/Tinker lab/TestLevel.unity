@@ -4310,6 +4310,10 @@ PrefabInstance:
       propertyPath: player
       value: 
       objectReference: {fileID: 1871600963}
+    - target: {fileID: 7912135627313566041, guid: 734619d7d9fb1514cab5ffe6d3e4ccf9, type: 3}
+      propertyPath: TerrainLayer.m_Bits
+      value: 576
+      objectReference: {fileID: 0}
     - target: {fileID: 9030055094919257029, guid: 734619d7d9fb1514cab5ffe6d3e4ccf9, type: 3}
       propertyPath: m_Name
       value: Utils

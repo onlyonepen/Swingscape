@@ -25,9 +25,10 @@ namespace Script.Enemy.State.Death
                 motor.enabled = false;
             }
 
-            // No constraints: let the now-unanimated rig tumble and collide like a normal
-            // physics object instead of dropping straight down with frozen rotation.
-            Enemy.rb.constraints = RigidbodyConstraints.None;
+            // The actual break-into-pieces + teardown happens later, in BaseEnemy.Death() -
+            // it has to wait until the async slice finishes and calls back into this enemy, so
+            // nothing here can detach/destroy anything the callback still needs.
+            Enemy.rigBuilder.enabled = false;
             Enemy.PlayDeathParticles();
         }
     }
