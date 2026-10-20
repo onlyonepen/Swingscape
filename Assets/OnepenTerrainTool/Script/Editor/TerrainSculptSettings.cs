@@ -52,6 +52,13 @@ public class TerrainSculptSettings : ScriptableSingleton<TerrainSculptSettings>
     public bool cleanupRemoveDebris = true;
     public bool cleanupFillHoles = true;
 
+    // ---- Mesh bake ----
+    // Voxelize a MeshFilter object into the terrain so it becomes sculptable terrain.
+    public bool bakeMatchCellSize = true;  // bake at the terrain's own stored resolution
+    public float bakeCellSize = 0.5f;      // explicit bake resolution when not matching the terrain
+    public bool bakeCarve = false;         // subtract the mesh volume instead of adding it
+    public bool bakePaintSelected = false; // tint the baked volume with the selected paint texture
+
     // ---- Auto-save ----
     // The edit-mode terrain is a transient session (chunk density isn't serialized in the
     // scene), so without this a recompile / scene reload / entering Play loses your edits.

@@ -681,6 +681,247 @@ public class TerrainTool : MonoBehaviour
         return _grid.AirDensity;
     }
 
+    // ---- Mesh baking (voxelize a MeshRenderer object into the density field) ----
+
+    /// <summary>Guard: refuse to voxelize into an absurd number of samples (keeps a bake from hanging / allocating gigabytes).</summary>
+    const long MaxBakeSamples = 32_000_000L;
+
+    /// <summary>
+    /// Voxelize an arbitrary triangle mesh into the terrain's density field, turning a
+    /// modelled shape into fully-sculptable terrain. The mesh is sampled at the resolution
+    /// implied by <paramref name="targetCellSize"/> (snapped to a valid Lod, so passing the
+    /// terrain's own cell size bakes at full detail): every grid sample inside the mesh is
+    /// driven solid and the thin band around the surface is given the true signed distance,
+    /// so marching cubes reproduces the surface smoothly rather than blockily. By default the
+    /// shape is CSG-UNIONED onto the existing terrain (added, joined to whatever it overlaps);
+    /// set <paramref name="carve"/> to subtract it instead. Reuses the same chunk-refine,
+    /// shared-sample and dirty-rebuild paths as the sculpt brush, so seams/LOD stay consistent
+    /// and (when driven through the Scene tool) the whole bake is one undo step. Runtime-safe —
+    /// no editor API — so it also works from gameplay code. Returns the number of samples stamped.
+    /// </summary>
+    /// <param name="mesh">Source mesh (e.g. a MeshFilter's sharedMesh).</param>
+    /// <param name="meshLocalToWorld">The source object's localToWorldMatrix, so the mesh lands where it sits in the scene.</param>
+    /// <param name="targetCellSize">Desired bake resolution in world units; snapped to the nearest Lod.</param>
+    /// <param name="carve">Subtract the mesh volume from the terrain instead of adding it.</param>
+    /// <param name="materialSlot">Texture slot to paint newly-solid samples with; &lt;0 leaves the base layer (slice 0).</param>
+    public int BakeMesh(Mesh mesh, Matrix4x4 meshLocalToWorld, float targetCellSize, bool carve = false, int materialSlot = -1)
+    {
+        if (mesh == null)
+            return 0;
+
+        Vector3[] verts = mesh.vertices;
+        int[] tris = mesh.triangles; // all submeshes concatenated
+        int triCount = tris.Length / 3;
+        if (verts.Length == 0 || triCount == 0)
+            return 0;
+
+        // Bring every triangle into manager-local space — the space the density SDF lives in:
+        // a sample at base index ws sits at ws * CellSize locally (see FillSlab/Sculpt). Removing
+        // the terrain object's own transform here is what makes the bake land at correct world size.
+        Matrix4x4 toLocal = transform.worldToLocalMatrix * meshLocalToWorld;
+        var ta = new Vector3[triCount];
+        var tb = new Vector3[triCount];
+        var tc = new Vector3[triCount];
+        var tmin = new Vector3[triCount];
+        var tmax = new Vector3[triCount];
+
+        var meshLo = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+        var meshHi = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+        for (int t = 0; t < triCount; t++)
+        {
+            Vector3 a = toLocal.MultiplyPoint3x4(verts[tris[t * 3]]);
+            Vector3 b = toLocal.MultiplyPoint3x4(verts[tris[t * 3 + 1]]);
+            Vector3 c = toLocal.MultiplyPoint3x4(verts[tris[t * 3 + 2]]);
+            ta[t] = a; tb[t] = b; tc[t] = c;
+            tmin[t] = Vector3.Min(Vector3.Min(a, b), c);
+            tmax[t] = Vector3.Max(Vector3.Max(a, b), c);
+            meshLo = Vector3.Min(meshLo, tmin[t]);
+            meshHi = Vector3.Max(meshHi, tmax[t]);
+        }
+
+        float cell = _grid.CellSize;
+        int targetLod = _grid.LodForCellSize(targetCellSize);
+        int stride = _grid.StrideAtLod(targetLod);
+        float spacing = _grid.SpacingAtLod(targetLod);
+        float band = spacing * 2f; // how far outside the surface we still write a (positive) SDF so the crossing stays accurate
+
+        // Base-lattice sample range covering the mesh + a band, snapped to the target Lod's stride so
+        // the samples we touch line up exactly with the chunk sample grids at that Lod.
+        Vector3 pad = Vector3.one * band;
+        Vector3Int sampleLo = SnapToStride(FloorDiv(meshLo - pad, cell), stride, up: false);
+        Vector3Int sampleHi = SnapToStride(CeilDiv(meshHi + pad, cell), stride, up: true);
+
+        long nx = (sampleHi.x - sampleLo.x) / stride + 1;
+        long ny = (sampleHi.y - sampleLo.y) / stride + 1;
+        long nz = (sampleHi.z - sampleLo.z) / stride + 1;
+        if (nx <= 0 || ny <= 0 || nz <= 0)
+            return 0;
+        if (nx * ny * nz > MaxBakeSamples)
+        {
+            Debug.LogWarning($"[TerrainTool] Bake skipped: the mesh covers too many samples ({nx}×{ny}×{nz}) " +
+                             "at this resolution. Use a coarser bake cell size.");
+            return 0;
+        }
+
+        // Pass 1: find every sample inside-or-near the surface, and the chunks that will own them.
+        var near = new List<KeyValuePair<Vector3Int, float>>();
+        var touchedChunks = new HashSet<Vector3Int>();
+        for (int x = sampleLo.x; x <= sampleHi.x; x += stride)
+        for (int y = sampleLo.y; y <= sampleHi.y; y += stride)
+        for (int z = sampleLo.z; z <= sampleHi.z; z += stride)
+        {
+            var ws = new Vector3Int(x, y, z);
+            Vector3 p = (Vector3)ws * cell;
+            float sdf = SignedDistanceToMesh(p, ta, tb, tc, tmin, tmax, triCount);
+            if (sdf >= band)
+                continue; // far outside the surface — a union/carve leaves it untouched
+
+            near.Add(new KeyValuePair<Vector3Int, float>(ws, sdf));
+            SampleOwners(ws);
+            foreach (var owner in _owners)
+                touchedChunks.Add(owner.Key);
+        }
+
+        if (near.Count == 0)
+            return 0;
+
+        // Pass 2: make every touched chunk fine enough to store the bake BEFORE writing into it,
+        // keeping face-neighbours within one Lod level (exactly what the sculpt brush does).
+        foreach (Vector3Int coord in touchedChunks)
+            EnsureLod(coord, targetLod);
+
+        // Pass 3: CSG-stamp each near sample (union to add the shape, subtract to carve it). rate = 1
+        // bakes it fully in one shot; StampWorldSample seeds a base texture layer on newly-solid samples.
+        foreach (KeyValuePair<Vector3Int, float> kv in near)
+        {
+            StampWorldSample(kv.Key, kv.Value, 1f, carve);
+            if (!carve && materialSlot >= 0 && kv.Value < _grid.IsoLevel)
+                PaintWorldSample(kv.Key, materialSlot, 1f, 1f); // tint the baked solid with the chosen texture
+        }
+
+        RebuildDirty();
+        return near.Count;
+    }
+
+    static Vector3Int FloorDiv(Vector3 v, float cell) => new Vector3Int(
+        Mathf.FloorToInt(v.x / cell), Mathf.FloorToInt(v.y / cell), Mathf.FloorToInt(v.z / cell));
+
+    static Vector3Int CeilDiv(Vector3 v, float cell) => new Vector3Int(
+        Mathf.CeilToInt(v.x / cell), Mathf.CeilToInt(v.y / cell), Mathf.CeilToInt(v.z / cell));
+
+    /// <summary>Round each component to a multiple of <paramref name="stride"/> (down, or up when <paramref name="up"/>), handling negatives.</summary>
+    static Vector3Int SnapToStride(Vector3Int v, int stride, bool up) => new Vector3Int(
+        SnapAxis(v.x, stride, up), SnapAxis(v.y, stride, up), SnapAxis(v.z, stride, up));
+
+    static int SnapAxis(int v, int stride, bool up)
+    {
+        int m = ((v % stride) + stride) % stride; // positive remainder, correct for negative v
+        if (m == 0)
+            return v;
+        return up ? v + (stride - m) : v - m;
+    }
+
+    /// <summary>
+    /// Signed distance from <paramref name="p"/> (manager-local) to the triangle mesh: the
+    /// magnitude is the distance to the nearest triangle; the sign comes from a +X ray-parity
+    /// test (odd crossings = inside = negative). Robust for closed meshes; a non-watertight mesh
+    /// bakes as best-effort (open boundaries may read as outside). Allocation-free per call.
+    /// </summary>
+    static float SignedDistanceToMesh(Vector3 p, Vector3[] ta, Vector3[] tb, Vector3[] tc,
+                                      Vector3[] tmin, Vector3[] tmax, int count)
+    {
+        float bestSq = float.MaxValue;
+        int crossings = 0;
+        for (int t = 0; t < count; t++)
+        {
+            Vector3 mn = tmin[t], mx = tmax[t];
+
+            // Nearest-distance (unsigned), with a cheap AABB reject so most triangles are skipped.
+            if (AabbDistanceSq(p, mn, mx) < bestSq)
+            {
+                float d = PointTriDistanceSq(p, ta[t], tb[t], tc[t]);
+                if (d < bestSq)
+                    bestSq = d;
+            }
+
+            // +X ray parity (sign): only triangles whose YZ box contains p and that lie partly ahead can cross.
+            if (p.y < mn.y || p.y > mx.y || p.z < mn.z || p.z > mx.z || mx.x < p.x)
+                continue;
+            if (RayPlusXCrossesTri(p, ta[t], tb[t], tc[t]))
+                crossings++;
+        }
+
+        float dist = Mathf.Sqrt(bestSq);
+        return (crossings & 1) == 1 ? -dist : dist;
+    }
+
+    /// <summary>Squared distance from a point to an axis-aligned box (0 when inside).</summary>
+    static float AabbDistanceSq(Vector3 p, Vector3 mn, Vector3 mx)
+    {
+        float dx = p.x < mn.x ? mn.x - p.x : (p.x > mx.x ? p.x - mx.x : 0f);
+        float dy = p.y < mn.y ? mn.y - p.y : (p.y > mx.y ? p.y - mx.y : 0f);
+        float dz = p.z < mn.z ? mn.z - p.z : (p.z > mx.z ? p.z - mx.z : 0f);
+        return dx * dx + dy * dy + dz * dz;
+    }
+
+    /// <summary>Does the ray from <paramref name="p"/> along +X pass through triangle (a,b,c)? Barycentric test in the YZ projection, then compare the crossing's X.</summary>
+    static bool RayPlusXCrossesTri(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+    {
+        float det = (b.z - c.z) * (a.y - c.y) + (c.y - b.y) * (a.z - c.z);
+        if (Mathf.Abs(det) < 1e-12f)
+            return false; // triangle edge-on to the ray — no robust crossing
+
+        float u = ((b.z - c.z) * (p.y - c.y) + (c.y - b.y) * (p.z - c.z)) / det;
+        float v = ((c.z - a.z) * (p.y - c.y) + (a.y - c.y) * (p.z - c.z)) / det;
+        float w = 1f - u - v;
+        if (u < 0f || v < 0f || w < 0f)
+            return false; // the ray misses the triangle in YZ
+
+        float hitX = u * a.x + v * b.x + w * c.x;
+        return hitX > p.x;
+    }
+
+    /// <summary>Squared distance from a point to a triangle (Ericson, Real-Time Collision Detection §5.1.5).</summary>
+    static float PointTriDistanceSq(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+    {
+        Vector3 ab = b - a, ac = c - a, ap = p - a;
+        float d1 = Vector3.Dot(ab, ap), d2 = Vector3.Dot(ac, ap);
+        if (d1 <= 0f && d2 <= 0f) return ap.sqrMagnitude; // vertex region A
+
+        Vector3 bp = p - b;
+        float d3 = Vector3.Dot(ab, bp), d4 = Vector3.Dot(ac, bp);
+        if (d3 >= 0f && d4 <= d3) return bp.sqrMagnitude; // vertex region B
+
+        float vc = d1 * d4 - d3 * d2;
+        if (vc <= 0f && d1 >= 0f && d3 <= 0f)
+        {
+            float v = d1 / (d1 - d3);
+            return (p - (a + v * ab)).sqrMagnitude; // edge region AB
+        }
+
+        Vector3 cp = p - c;
+        float d5 = Vector3.Dot(ab, cp), d6 = Vector3.Dot(ac, cp);
+        if (d6 >= 0f && d5 <= d6) return cp.sqrMagnitude; // vertex region C
+
+        float vb = d5 * d2 - d1 * d6;
+        if (vb <= 0f && d2 >= 0f && d6 <= 0f)
+        {
+            float w = d2 / (d2 - d6);
+            return (p - (a + w * ac)).sqrMagnitude; // edge region AC
+        }
+
+        float va = d3 * d6 - d5 * d4;
+        if (va <= 0f && (d4 - d3) >= 0f && (d5 - d6) >= 0f)
+        {
+            float w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+            return (p - (b + w * (c - b))).sqrMagnitude; // edge region BC
+        }
+
+        float denom = 1f / (va + vb + vc); // inside the face
+        float vv = vb * denom, ww = vc * denom;
+        return (p - (a + ab * vv + ac * ww)).sqrMagnitude;
+    }
+
     // ---- Automatic cleanup -------------------------------------------------
 
     /// <summary>Guard: refuse to scan an absurdly large bounding box (keeps a one-click cleanup from allocating gigabytes / hanging).</summary>

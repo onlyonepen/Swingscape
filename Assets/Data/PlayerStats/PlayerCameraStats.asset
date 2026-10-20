@@ -16,8 +16,8 @@ MonoBehaviour:
   invertCamera: 0
   mouseSensitivity: 2
   maxLookAngle: 85
-  minFov: 70
-  maxFov: 120
+  minFov: 60
+  maxFov: 95
   fovSmoothSpeed: 10
   fovChangeTreshold: 25
   MaxSpeedForFovChange: 50

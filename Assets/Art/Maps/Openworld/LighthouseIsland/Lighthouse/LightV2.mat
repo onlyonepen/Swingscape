@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: LightV2
+  m_Shader: {fileID: 4800000, guid: e6a0e6c2f7dac3745b99be9bd83b9c68, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _INVERTLENGTH_ON
+  - _USENOISE_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _NoiseTex:
+        m_Texture: {fileID: 2800000, guid: 00e650f6b0f213b468d0ca68c2b8bcee, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _CoreStrength: 0.29
+    - _EdgeFalloff: 1.13
+    - _EmissionIntensity: 1
+    - _InvertLength: 1
+    - _LengthFalloff: 0.76
+    - _NearFadeEnd: 0.2
+    - _NearFadeStart: 0.05
+    - _NoiseStrength: 0.665
+    - _Opacity: 1
+    - _RimStrength: 0
+    - _UseNoise: 1
+    m_Colors:
+    - _Color: {r: 1, g: 0.8770805, b: 0.45300823, a: 1}
+    - _NoiseScrollSpeed: {r: 0.14, g: 0.3, b: 0, a: 0}
+    - _NoiseTiling: {r: 2, g: 2, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

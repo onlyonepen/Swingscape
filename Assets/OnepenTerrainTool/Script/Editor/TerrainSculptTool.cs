@@ -177,6 +177,70 @@ public class TerrainSculptTool : EditorTool
         return false;
     }
 
+    // ---- Mesh baking -------------------------------------------------------
+
+    /// <summary>
+    /// Voxelize <paramref name="source"/>'s mesh into <paramref name="tool"/> via
+    /// <see cref="TerrainTool.BakeMesh"/>, preferring the Scene-view tool instance (so the whole
+    /// bake is one undoable step) and falling back to a direct, non-undoable pass when the tool
+    /// isn't being edited in the Scene. Options (resolution, carve, paint) come from the shared
+    /// <see cref="TerrainSculptSettings"/>. Shared by the control panel.
+    /// </summary>
+    public static void BakeMeshIntoTerrain(TerrainTool tool, GameObject source)
+    {
+        if (tool == null || source == null)
+            return;
+        if (!TryGetBakeMesh(source, out Mesh mesh, out Matrix4x4 localToWorld))
+        {
+            Debug.LogWarning($"[TerrainTool] Bake skipped: '{source.name}' has no MeshFilter with a mesh.");
+            return;
+        }
+
+        TerrainSculptSettings s = S;
+        s.PushTo(tool); // make sure the grid/material are valid before baking into it
+
+        float cell = s.bakeMatchCellSize ? tool.Grid.CellSize : Mathf.Max(s.bakeCellSize, tool.Grid.CellSize);
+        int slot = s.bakePaintSelected ? s.selectedMaterial : -1;
+
+        if (ActiveInstance != null && ActiveInstance.Tool == tool)
+        {
+            ActiveInstance.RunBake(mesh, localToWorld, cell, s.bakeCarve, slot); // undoable path
+            return;
+        }
+
+        int changed = tool.BakeMesh(mesh, localToWorld, cell, s.bakeCarve, slot);
+        SceneView.RepaintAll();
+        Debug.Log($"[TerrainTool] Baked '{source.name}' into the terrain ({changed} samples). " +
+                  "(Activate “Edit in Scene View” first to make the bake undoable.)");
+    }
+
+    /// <summary>Run a bake as a single undoable stroke, then repaint and queue an auto-save.</summary>
+    public void RunBake(Mesh mesh, Matrix4x4 localToWorld, float cellSize, bool carve, int materialSlot)
+    {
+        TerrainTool tool = Tool;
+        if (tool == null)
+            return;
+
+        BeginStroke();
+        int changed = tool.BakeMesh(mesh, localToWorld, cellSize, carve, materialSlot);
+        EndStrokeIfAny(); // commits an undo step only if anything actually changed
+
+        SceneView.RepaintAll();
+        Debug.Log($"[TerrainTool] Baked mesh into the terrain ({changed} samples).");
+    }
+
+    /// <summary>Pull the bakeable mesh (and its world transform) off a source object's MeshFilter.</summary>
+    static bool TryGetBakeMesh(GameObject source, out Mesh mesh, out Matrix4x4 localToWorld)
+    {
+        mesh = null;
+        localToWorld = Matrix4x4.identity;
+        if (source == null || !source.TryGetComponent(out MeshFilter mf) || mf.sharedMesh == null)
+            return false;
+        mesh = mf.sharedMesh;
+        localToWorld = source.transform.localToWorldMatrix;
+        return true;
+    }
+
     void OnPlayModeChanged(PlayModeStateChange change)
     {
         if (change == PlayModeStateChange.ExitingEditMode)

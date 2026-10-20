@@ -18,6 +18,10 @@ public static class TerrainToolActions
     static bool _configFoldout;
     static bool _exportFoldout;
     static bool _cleanupFoldout = true;
+    static bool _bakeFoldout = true;
+
+    /// <summary>The object whose mesh gets voxelized into the terrain (transient; defaults to the current selection).</summary>
+    static GameObject _bakeSource;
 
     /// <summary>
     /// Draw the full edit-mode control panel (scene-editing toggle, brush, textures, setup,
@@ -37,6 +41,7 @@ public static class TerrainToolActions
 
         EditorGUILayout.Space(8);
         DrawCleanupFoldout(tool);
+        DrawBakeFoldout(tool);
         DrawSetupFoldout(tool);
         DrawConfigFoldout(tool);
         DrawExportFoldout(tool);
@@ -73,6 +78,81 @@ public static class TerrainToolActions
         }
         EditorGUILayout.EndFoldoutHeaderGroup();
     }
+
+    /// <summary>
+    /// Voxelize a mesh (any object with a MeshFilter) into the terrain so a modelled shape becomes
+    /// fully-sculptable terrain. Pick a source object, choose the bake resolution (defaulting to the
+    /// terrain's own cell size, as requested) and whether to add or carve, then bake. Undoable when
+    /// editing in the Scene view.
+    /// </summary>
+    static void DrawBakeFoldout(TerrainTool tool)
+    {
+        _bakeFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(_bakeFoldout, "Bake Mesh");
+        if (_bakeFoldout)
+        {
+            TerrainSculptSettings s = TerrainSculptSettings.instance;
+
+            EditorGUILayout.HelpBox(
+                "Voxelize a mesh (any object with a MeshFilter) into this terrain so it becomes " +
+                "sculptable. The shape is added at the chosen resolution and joined to the existing " +
+                "terrain; sculpt/carve it afterwards like anything else.", MessageType.Info);
+
+            // Default the source to the active selection when nothing is pinned (and it isn't the terrain itself).
+            if (_bakeSource == null && Selection.activeGameObject != null &&
+                Selection.activeGameObject != tool.gameObject &&
+                Selection.activeGameObject.GetComponent<MeshFilter>() != null)
+                _bakeSource = Selection.activeGameObject;
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                _bakeSource = (GameObject)EditorGUILayout.ObjectField(
+                    new GUIContent("Source Object", "The object whose mesh is baked into the terrain."),
+                    _bakeSource, typeof(GameObject), allowSceneObjects: true);
+                using (new EditorGUI.DisabledScope(Selection.activeGameObject == null ||
+                                                   Selection.activeGameObject.GetComponent<MeshFilter>() == null))
+                {
+                    if (GUILayout.Button("Use Selected", GUILayout.Width(90)))
+                        _bakeSource = Selection.activeGameObject;
+                }
+            }
+
+            // A grid built from the current (self-clamping) settings, so the resolution hint matches what the bake will use.
+            var grid = new TerrainGrid(s.chunkSize, s.cellSize, s.maxLod, s.isoLevel);
+
+            EditorGUI.BeginChangeCheck();
+            s.bakeMatchCellSize = EditorGUILayout.ToggleLeft(
+                new GUIContent("Match Terrain Cell Size", "Bake at the terrain's own stored resolution (recommended). Turn off to pick a coarser bake resolution."),
+                s.bakeMatchCellSize);
+            using (new EditorGUI.DisabledScope(s.bakeMatchCellSize))
+                s.bakeCellSize = EditorGUILayout.Slider(
+                    new GUIContent("Bake Cell Size", "World size of one bake voxel. Smaller = more detail but slower."),
+                    s.bakeCellSize, grid.CellSize, grid.CellSize * 16f);
+            s.bakeCarve = EditorGUILayout.ToggleLeft(
+                new GUIContent("Carve (subtract)", "Subtract the mesh volume from the terrain instead of adding it."), s.bakeCarve);
+            s.bakePaintSelected = EditorGUILayout.ToggleLeft(
+                new GUIContent("Paint With Selected Texture", "Tint the baked volume with the texture selected in the Paint palette."), s.bakePaintSelected);
+            if (EditorGUI.EndChangeCheck())
+                s.Persist();
+
+            float cell = s.bakeMatchCellSize ? grid.CellSize : Mathf.Max(s.bakeCellSize, grid.CellSize);
+            Hint($"Baking at {cell:0.###} u/voxel   ·   Lod {grid.LodForCellSize(cell)}");
+
+            bool canBake = TryGetMeshFilterWithMesh(_bakeSource);
+            using (new EditorGUI.DisabledScope(Application.isPlaying || !canBake))
+            {
+                if (GUILayout.Button(s.bakeCarve ? "Carve Mesh From Terrain" : "Bake Mesh Into Terrain", GUILayout.Height(24)))
+                    TerrainSculptTool.BakeMeshIntoTerrain(tool, _bakeSource);
+            }
+            if (_bakeSource != null && !canBake)
+                EditorGUILayout.HelpBox("The source object has no MeshFilter with a mesh.", MessageType.Warning);
+            EditorGUILayout.LabelField("Undoable while editing in the Scene.", EditorStyles.miniLabel);
+        }
+        EditorGUILayout.EndFoldoutHeaderGroup();
+    }
+
+    /// <summary>True when <paramref name="go"/> has a MeshFilter carrying a mesh we can bake.</summary>
+    static bool TryGetMeshFilterWithMesh(GameObject go)
+        => go != null && go.TryGetComponent(out MeshFilter mf) && mf.sharedMesh != null;
 
     /// <summary>The prominent "edit in the scene view" toggle — the equivalent of selecting a Unity terrain tool.</summary>
     static void DrawSceneEditToggle(TerrainTool tool)
