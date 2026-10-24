@@ -36,6 +36,12 @@ namespace Script.Enemy.State.Attack
         {
             base.OnStateUpdate();
 
+            if (GlobalReference.Instance?.player == null)
+            {
+                Enemy.ChangeState(Enemy.stateFactory.CreateIdleState(Enemy));
+                return;
+            }
+
             Vector3 predictedPosition = GetPredictedPosition();
 
             if (shotsFired < BurstCount && Time.time >= nextShotTime)

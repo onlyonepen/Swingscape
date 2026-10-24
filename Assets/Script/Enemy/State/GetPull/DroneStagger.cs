@@ -28,6 +28,7 @@ namespace Script.Enemy.State.GetPull
         
         private bool seePlayer()
         {
+            if (GlobalReference.Instance?.player == null) return false;
             GameObject player = GlobalReference.Instance.player.gameObject;
 
             float playerDist = Vector3.Distance(player.transform.position, Enemy.transform.position);

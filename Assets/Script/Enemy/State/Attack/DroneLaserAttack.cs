@@ -26,12 +26,20 @@ namespace Script.Enemy.State.Attack
 
             // The endpoint is "created" here and chases the player for the whole anticipation
             // window, so it's already mid-track (not snapping into place) once the beam fires.
-            trackedEnd = GlobalReference.Instance.player.transform.position;
+            trackedEnd = GlobalReference.Instance?.player != null
+                ? GlobalReference.Instance.player.transform.position
+                : Enemy.transform.position;
         }
 
         public override void OnStateUpdate()
         {
             base.OnStateUpdate();
+
+            if (GlobalReference.Instance?.player == null)
+            {
+                Enemy.ChangeState(Enemy.stateFactory.CreateIdleState(Enemy));
+                return;
+            }
 
             // Base speed plus a distance-scaled bonus, so the farther the endpoint is from the
             // player, the faster it closes the gap.

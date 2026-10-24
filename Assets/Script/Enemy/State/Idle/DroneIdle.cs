@@ -61,7 +61,7 @@ namespace Script.Enemy.State.Idle
 
                 // Bail into a fresh target instead of pushing through obstacles — this is just
                 // idle flavor movement, not navigation, so it doesn't need to route around things.
-                LayerMask obstacleMask = ~GlobalReference.Instance.playerLayer;
+                LayerMask obstacleMask = GetObstacleMask();
                 if (Physics.Raycast(navPosition, currentHeading, 2f, obstacleMask))
                 {
                     hasWanderTarget = false;
@@ -82,7 +82,7 @@ namespace Script.Enemy.State.Idle
 
         private void PickNewWanderTarget()
         {
-            LayerMask obstacleMask = ~GlobalReference.Instance.playerLayer;
+            LayerMask obstacleMask = GetObstacleMask();
 
             for (int attempt = 0; attempt < WanderTargetAttempts; attempt++)
             {
@@ -109,9 +109,14 @@ namespace Script.Enemy.State.Idle
             hasWanderTarget = true;
         }
 
+        private static LayerMask GetObstacleMask()
+        {
+            return GlobalReference.Instance != null ? ~GlobalReference.Instance.playerLayer : ~0;
+        }
+
         private void playerCheck()
         {
-            if (GlobalReference.Instance == null) return;
+            if (GlobalReference.Instance == null || GlobalReference.Instance.player == null) return;
             GameObject player = GlobalReference.Instance.player.gameObject;
 
             float playerDist = Vector3.Distance(player.transform.position, Enemy.transform.position);

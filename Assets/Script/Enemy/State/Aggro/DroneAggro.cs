@@ -40,6 +40,7 @@ namespace Script.Enemy.State.Aggro
 
         private void playerCheck()
         {
+            if (GlobalReference.Instance?.player == null) return;
             GameObject player = GlobalReference.Instance.player.gameObject;
 
             float playerDist = Vector3.Distance(player.transform.position, Enemy.transform.position);
